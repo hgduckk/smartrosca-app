@@ -9,8 +9,10 @@ import {
   contributeOnChain,
   getBrowserSigner,
   getMaxBidCapOnChain,
+  getOrganizerOnChain,
   listenForBidPlaced,
   listenForMemberDefaulted,
+  markDefaultOnChain,
   payoutOnChain,
   placeBidOnChain,
 } from "@/lib/contract";
@@ -86,6 +88,9 @@ function BidRoom({ groupId }: { groupId: string }) {
   const [closingRound, setClosingRound] = useState(false);
   const [contributing, setContributing] = useState(false);
   const [payingOut, setPayingOut] = useState(false);
+  const [organizerAddress, setOrganizerAddress] = useState<string | null>(null);
+  const [markingDefaultUserId, setMarkingDefaultUserId] = useState<string | null>(null);
+  const [defaultedUserIds, setDefaultedUserIds] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
 
   const loadBids = useCallback(async (roundId: string) => {
@@ -184,6 +189,16 @@ function BidRoom({ groupId }: { groupId: string }) {
       );
     })();
   }, [group]);
+
+  // Đọc địa chỉ organizer thật từ contract — quyết định ai thấy nút "Đánh dấu vi phạm".
+  useEffect(() => {
+    if (!group?.contractAddress) return;
+    getOrganizerOnChain(group.contractAddress).then(setOrganizerAddress);
+  }, [group?.contractAddress]);
+
+  const isOrganizer = Boolean(
+    address && organizerAddress && address.toLowerCase() === organizerAddress.toLowerCase()
+  );
 
   const deadline = useMemo(() => {
     if (!round || !group) return null;
@@ -306,6 +321,33 @@ function BidRoom({ groupId }: { groupId: string }) {
   const allContributed =
     requiredMembers.length > 0 && requiredMembers.every((m) => hasContributed(m.userId));
 
+  // Hạn đóng góp của kỳ = round.startTime + roundDuration (cả kỳ, không phải riêng
+  // bidDuration). Dùng để quyết định nút "Đánh dấu vi phạm" có bấm được chưa.
+  const contributionDeadlineMs = useMemo(() => {
+    if (!round || !group) return null;
+    return new Date(round.createdAt).getTime() + group.roundDurationSec * 1000;
+  }, [round, group]);
+  const isPastContributionDeadline =
+    contributionDeadlineMs !== null && now > contributionDeadlineMs;
+
+  // Đánh dấu vi phạm — hành động THỦ CÔNG của organizer, không có gì tự động chạy
+  // theo thời gian (blockchain không có cron/scheduler). Credit score của thành
+  // viên sẽ tự giảm qua listener event MemberDefaulted đã đăng ký ở trên.
+  const handleMarkDefault = async (member: Member) => {
+    if (!group?.contractAddress) return;
+    setMarkingDefaultUserId(member.userId);
+    setError(null);
+    try {
+      const signer = await getBrowserSigner();
+      await markDefaultOnChain(signer, group.contractAddress, member.user.walletAddress);
+      setDefaultedUserIds((prev) => new Set(prev).add(member.userId));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Có lỗi xảy ra.");
+    } finally {
+      setMarkingDefaultUserId(null);
+    }
+  };
+
   const handleContribute = async () => {
     if (!address || !round || !group?.contractAddress || !myMember) return;
     const requiredWei = requiredWeiFor(myMember);
@@ -418,6 +460,8 @@ function BidRoom({ groupId }: { groupId: string }) {
             {requiredMembers.map((m) => {
               const requiredWei = requiredWeiFor(m);
               const paid = hasContributed(m.userId);
+              const isDefaulted = defaultedUserIds.has(m.userId);
+              const canMarkDefault = isOrganizer && !paid && !isDefaulted;
               return (
                 <li key={m.userId} className="row" style={{ justifyContent: "space-between" }}>
                   <span>
@@ -427,8 +471,24 @@ function BidRoom({ groupId }: { groupId: string }) {
                       cần đóng {requiredWei ? formatEther(requiredWei) : "—"} ETH
                     </span>
                   </span>
-                  <span className={`badge ${paid ? "badge-success" : "badge-neutral"}`}>
-                    {paid ? "Đã đóng ✓" : "Chưa đóng"}
+                  <span className="row" style={{ gap: "0.4rem" }}>
+                    <span
+                      className={`badge ${
+                        isDefaulted ? "badge-danger" : paid ? "badge-success" : "badge-neutral"
+                      }`}
+                    >
+                      {isDefaulted ? "Vi phạm" : paid ? "Đã đóng ✓" : "Chưa đóng"}
+                    </span>
+                    {canMarkDefault && (
+                      <button
+                        className="btn btn-outline btn-sm"
+                        onClick={() => handleMarkDefault(m)}
+                        disabled={!isPastContributionDeadline || markingDefaultUserId === m.userId}
+                        title={!isPastContributionDeadline ? "Chưa tới hạn đóng góp" : undefined}
+                      >
+                        {markingDefaultUserId === m.userId ? "Đang xử lý..." : "Đánh dấu vi phạm"}
+                      </button>
+                    )}
                   </span>
                 </li>
               );
