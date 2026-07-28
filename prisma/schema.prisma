@@ -1,0 +1,152 @@
+// Prisma schema — dữ liệu off-chain của SmartROSCA.
+// Dữ liệu minh bạch (bid/đóng/nhận/phạt) nằm trên smart contract (Sepolia);
+// các model dưới đây chỉ lưu bản sao/tổng hợp phục vụ truy vấn nhanh + dữ liệu
+// không thể (hoặc không nên) đưa lên blockchain (KYC, credit score...).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum KycStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum HuiGroupStatus {
+  OPEN
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id            String   @id @default(cuid())
+  walletAddress String   @unique
+  displayName   String?
+  email         String?
+  createdAt     DateTime @default(now())
+
+  kycRecord         KycRecord?
+  creditScore       CreditScore?
+  creditScoreEvents CreditScoreEvent[]
+  huiMembers        HuiMember[]
+  bids              Bid[]
+  contributions     Contribution[]
+  wonRounds         Round[]             @relation("RoundWinner")
+}
+
+// Trạng thái eKYC — MOCK hoàn toàn ở giai đoạn này.
+// KHÔNG lưu ảnh CCCD/khuôn mặt thật, chỉ lưu trạng thái xác thực giả lập.
+model KycRecord {
+  id          String    @id @default(cuid())
+  userId      String    @unique
+  status      KycStatus @default(PENDING)
+  mockDocType String?
+  verifiedAt  DateTime?
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model CreditScore {
+  userId    String   @id
+  score     Int      @default(500)
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model CreditScoreEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  delta     Int
+  reason    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model HuiGroup {
+  id               String         @id @default(cuid())
+  name             String
+  contractAddress  String?
+  // Số tiền on-chain lưu dạng string (wei) để tránh tràn số (BigInt).
+  shareAmountWei   String
+  totalMembers     Int
+  collateralWei    String
+  roundDurationSec Int
+  bidDurationSec   Int
+  status           HuiGroupStatus @default(OPEN)
+  createdAt        DateTime       @default(now())
+
+  members HuiMember[]
+  rounds  Round[]
+}
+
+model HuiMember {
+  id         String  @id @default(cuid())
+  groupId    String
+  userId     String
+  hasWon     Boolean @default(false)
+  wonRound   Int?
+  isActive   Boolean @default(true)
+  joinTxHash String?
+
+  group HuiGroup @relation(fields: [groupId], references: [id])
+  user  User     @relation(fields: [userId], references: [id])
+
+  @@unique([groupId, userId])
+}
+
+model Round {
+  id                       String   @id @default(cuid())
+  groupId                  String
+  roundNumber              Int
+  winnerUserId             String?
+  winningBidWei            String?
+  requiredFromSurvivorWei  String?
+  requiredFromDeadWei      String?
+  bidClosed                Boolean  @default(false)
+  settled                  Boolean  @default(false)
+  closeRoundTxHash         String?
+  payoutTxHash             String?
+  // Mốc bắt đầu vòng đấu — dùng để tính đồng hồ đếm ngược tới hết bidDurationSec.
+  createdAt                DateTime @default(now())
+
+  group    HuiGroup @relation(fields: [groupId], references: [id])
+  winner   User?    @relation("RoundWinner", fields: [winnerUserId], references: [id])
+  bids     Bid[]
+  contributions Contribution[]
+
+  @@unique([groupId, roundNumber])
+}
+
+model Bid {
+  id        String   @id @default(cuid())
+  roundId   String
+  userId    String
+  amountWei String
+  txHash    String?
+  createdAt DateTime @default(now())
+
+  round Round @relation(fields: [roundId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
+}
+
+model Contribution {
+  id        String   @id @default(cuid())
+  roundId   String
+  userId    String
+  amountWei String
+  txHash    String?
+  onTime    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  round Round @relation(fields: [roundId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
+}
