@@ -46,6 +46,10 @@ function CreateGroupForm() {
       const roundDurationSec = Number(form.roundDurationDays) * 86400;
       const bidDurationSec = Number(form.bidDurationMinutes) * 60;
 
+      if (!Number.isInteger(totalMembers) || totalMembers < 2) {
+        throw new Error("Số thành viên phải là số nguyên và tối thiểu là 2.");
+      }
+
       // 1. Tạo group trên smart contract trước (nguồn sự thật minh bạch, bất biến).
       const signer = await getBrowserSigner();
       const { contractAddress, txHash } = await createGroupOnChain(signer, {

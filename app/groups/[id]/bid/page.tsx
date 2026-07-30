@@ -8,7 +8,7 @@ import {
   closeRoundOnChain,
   contributeOnChain,
   getBrowserSigner,
-  getMaxBidCapOnChain,
+  getCurrentMaxBidCapOnChain,
   getOrganizerOnChain,
   listenForBidPlaced,
   listenForMemberDefaulted,
@@ -84,6 +84,7 @@ function BidRoom({ groupId }: { groupId: string }) {
   const [now, setNow] = useState(() => Date.now());
   const [bidAmountEth, setBidAmountEth] = useState("");
   const [maxBidCapWei, setMaxBidCapWei] = useState<bigint | null>(null);
+  const [maxBidCapIsOnChain, setMaxBidCapIsOnChain] = useState(false);
   const [placingBid, setPlacingBid] = useState(false);
   const [closingRound, setClosingRound] = useState(false);
   const [contributing, setContributing] = useState(false);
@@ -172,23 +173,28 @@ function BidRoom({ groupId }: { groupId: string }) {
     return unsubscribe;
   }, [group?.contractAddress]);
 
-  // Đọc trần lãi thật từ contract nếu có; fallback về ước tính client-side.
+  // Đọc trần lãi ĐỘNG của kỳ hiện tại thật từ contract (currentMaxBidCap()) — ưu
+  // tiên tuyệt đối vì trần phụ thuộc kỳ đang diễn ra trên chain, không thể suy ra
+  // chính xác chỉ từ dữ liệu DB phía client. Chỉ fallback về ước tính client-side
+  // khi chưa có provider (chưa cài MetaMask).
   useEffect(() => {
-    if (!group) return;
+    if (!group || !round) return;
     (async () => {
       const onChainCap = group.contractAddress
-        ? await getMaxBidCapOnChain(group.contractAddress)
+        ? await getCurrentMaxBidCapOnChain(group.contractAddress)
         : null;
+      setMaxBidCapIsOnChain(onChainCap !== null);
       setMaxBidCapWei(
         onChainCap ??
           estimateMaxBidCapWei(
             BigInt(group.shareAmountWei),
             group.totalMembers,
+            round.roundNumber,
             group.roundDurationSec
           )
       );
     })();
-  }, [group]);
+  }, [group, round]);
 
   // Đọc địa chỉ organizer thật từ contract — quyết định ai thấy nút "Đánh dấu vi phạm".
   useEffect(() => {
@@ -559,12 +565,17 @@ function BidRoom({ groupId }: { groupId: string }) {
             </label>
             {maxBidCapWei !== null && (
               <p className="muted" style={{ fontSize: "0.85rem" }}>
-                Trần lãi ước tính (~20%/năm) cho kỳ này: {formatEther(maxBidCapWei)} ETH
+                {maxBidCapIsOnChain
+                  ? `Trần lãi kỳ ${round.roundNumber} (đọc từ contract, 20%/năm):`
+                  : `Trần lãi ước tính kỳ ${round.roundNumber} (~20%/năm):`}{" "}
+                {formatEther(maxBidCapWei)} ETH
+                {maxBidCapWei === BigInt(0) && " — kỳ cuối không còn kỳ nào để tính lãi"}
               </p>
             )}
             {exceedsCap && (
               <p style={{ color: "var(--color-warning)" }}>
-                Cảnh báo: mức lãi kêu vượt trần ước tính — smart contract có thể từ chối giao dịch.
+                Cảnh báo: mức lãi kêu vượt trần{maxBidCapIsOnChain ? "" : " ước tính"} — smart
+                contract sẽ từ chối giao dịch.
               </p>
             )}
             <button

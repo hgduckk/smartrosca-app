@@ -153,9 +153,10 @@ roundDuration, bidDuration)`. Nghĩa là:
   `GroupCompleted`, `MemberDefaulted`, `MemberJoined`, `Payout`, `RoundClosed`,
   `RoundStarted`, và toàn bộ hàm view/nonpayable/payable).
 - `createGroupOnChain()`: dùng `ContractFactory` để **deploy** một contract mới
-  cho mỗi group — cần thêm `CONTRACT_BYTECODE` (đang để trống, chờ user dán từ
-  Remix: Solidity Compiler → Bytecode → field `"object"`). Đây là điểm chặn
-  duy nhất còn lại — chưa deploy được tới khi có bytecode.
+  cho mỗi group — cần `CONTRACT_BYTECODE` lấy từ Remix (Solidity Compiler →
+  Bytecode → field `"object"`). **Đã dán xong** và đối chiếu khớp 100% với
+  bản gốc; `IS_BYTECODE_CONFIGURED` dùng để UI tự nhận biết khi nào sẵn sàng
+  deploy.
 - `joinGroupOnChain()` → `join({ value: collateralWei })`.
 - `placeBidOnChain()` → `placeBid(amountWei)` (không payable — chỉ ghi nhận
   mức lãi, tiền không chuyển lúc bid).
@@ -214,7 +215,10 @@ ABI có hàm `markDefault(address member)` nhưng không có cơ chế tự đ�
 ### Còn thiếu / chờ quyết định
 
 1. Người tạo dây cần có Sepolia ETH testnet (faucet) để trả gas deploy contract
-   mới cho mỗi dây hụi.
+   mới cho mỗi dây hụi — **chưa có báo cáo nào về việc đã thử deploy/test thật
+   trên Sepolia** với ABI+bytecode hiện tại; nên coi đây là bước kiểm thử
+   end-to-end còn treo (deploy → join → bid → close → contribute → payout →
+   markDefault), không chỉ là vấn đề gas.
 2. `NEXT_PUBLIC_CONTRACT_ADDRESS` trong `.env`/`.env.example` không còn được
    dùng — có thể dọn sau, không gấp.
 3. `getOnChainHistory()` trong `lib/contract.ts` vẫn là placeholder trả về
@@ -223,4 +227,5 @@ ABI có hàm `markDefault(address member)` nhưng không có cơ chế tự đ�
    xác thực chéo với chain sau này.
 4. Migration mới nhất (thêm cột `createdAt` cho `Round`) đã được áp dụng qua
    `prisma migrate dev` — nhớ chạy lại migrate sau mỗi lần thay đổi
-   `schema.prisma` nếu có thay đổi tiếp theo.
+   `schema.prisma` nếu có thay đổi tiếp theo. Hiện chỉ có 1 migration
+   (`20260728081107_init`) trên Supabase.

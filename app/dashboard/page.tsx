@@ -170,7 +170,7 @@ export default function DashboardPage() {
         </div>
       ))}
 
-      <h2>Lịch sử giao dịch</h2>
+      <h2 id="history">Lịch sử giao dịch</h2>
       <div className="card">
         {data.history.length === 0 && <p className="empty-state">Chưa có giao dịch nào.</p>}
         <ul className="list-plain">

@@ -22,12 +22,15 @@ export async function POST(
     return NextResponse.json({ error: "Thiếu winnerWalletAddress" }, { status: 400 });
   }
 
-  const winner = await prisma.user.findUnique({
+  // Upsert thay vì findUnique+404: người thắng chắc chắn tồn tại on-chain (đã
+  // join + đặt bid), nhưng nếu vì lý do gì đó User off-chain chưa kịp tạo, ta vẫn
+  // phải ghi nhận kết quả chốt vòng — không được để round kẹt mãi ở bidClosed=false
+  // chỉ vì thiếu 1 bản ghi User có thể tự tạo được.
+  const winner = await prisma.user.upsert({
     where: { walletAddress: winnerWalletAddress.toLowerCase() },
+    update: {},
+    create: { walletAddress: winnerWalletAddress.toLowerCase() },
   });
-  if (!winner) {
-    return NextResponse.json({ error: "Không tìm thấy user thắng cuộc" }, { status: 404 });
-  }
 
   const round = await prisma.round.update({
     where: { id },

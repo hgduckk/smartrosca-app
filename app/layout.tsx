@@ -3,6 +3,7 @@ import Link from "next/link";
 import "./globals.css";
 import { WalletProvider } from "@/lib/wallet-context";
 import { ConnectWalletButton } from "@/components/ConnectWalletButton";
+import { BottomTabBar } from "@/components/BottomTabBar";
 
 export const metadata: Metadata = {
   title: "SmartROSCA",
@@ -18,19 +19,21 @@ export default function RootLayout({
     <html lang="vi">
       <body>
         <WalletProvider>
-          <header className="app-header">
-            <Link href="/" className="app-brand">
-              SmartROSCA
-            </Link>
-            <nav className="app-nav">
-              <Link href="/kyc">eKYC</Link>
-              <Link href="/create">Tạo dây hụi</Link>
-              <Link href="/groups">Danh sách dây hụi</Link>
-              <Link href="/dashboard">Dashboard</Link>
-              <ConnectWalletButton />
-            </nav>
-          </header>
-          {children}
+          <div className="phone-outer">
+            <div className="phone-frame">
+              <div className="phone-notch" aria-hidden="true" />
+              <div className="phone-screen">
+                <header className="app-header">
+                  <Link href="/" className="app-brand">
+                    SmartROSCA
+                  </Link>
+                  <ConnectWalletButton />
+                </header>
+                <div className="phone-content">{children}</div>
+              </div>
+              <BottomTabBar />
+            </div>
+          </div>
         </WalletProvider>
       </body>
     </html>
