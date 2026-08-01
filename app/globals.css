@@ -995,3 +995,1042 @@ textarea {
     transition-duration: 0.001ms !important;
   }
 }
+
+/* ================================================================
+   ONBOARDING / AUTH / eKYC — full-screen, bám sát mẫu Figma
+   Tông sáng: nền trắng → tím nhạt, tiêu đề navy đậm, nút gradient tím,
+   sóng ribbon tím ở đáy màn hình. Prefix `.ob-` để không đụng class cũ.
+   ================================================================ */
+
+:root {
+  --ob-heading: #241f4d;
+  --ob-input-bg: #f1eef7;
+  --ob-input-border: transparent;
+  --ob-gradient: linear-gradient(100deg, #7c4dff 0%, #6c4bf4 55%, #8b5cf6 100%);
+  --ob-screen-bg: linear-gradient(180deg, #ffffff 0%, #ffffff 45%, #f6f1fd 100%);
+}
+
+:root[data-theme="dark"] {
+  --ob-heading: #f3f1fa;
+  --ob-input-bg: #241f33;
+  --ob-input-border: #322c47;
+  --ob-screen-bg: linear-gradient(180deg, #14111d 0%, #14111d 45%, #1b1630 100%);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ob-heading: #f3f1fa;
+    --ob-input-bg: #241f33;
+    --ob-input-border: #322c47;
+    --ob-screen-bg: linear-gradient(180deg, #14111d 0%, #14111d 45%, #1b1630 100%);
+  }
+}
+
+/* Bọc nội dung "trần" (không header/tabbar) cho các màn onboarding. */
+.phone-content-bare {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+/* ---------- Khung màn onboarding ---------- */
+
+.ob-screen {
+  position: relative;
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  padding: calc(1.6rem + env(safe-area-inset-top, 0px)) 1.5rem
+    calc(1.6rem + env(safe-area-inset-bottom, 0px));
+  background: var(--ob-screen-bg);
+  overflow: hidden;
+}
+
+/* Sóng ribbon tím ở đáy — SVG tuyệt đối, không chắn thao tác. */
+.ob-wave {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: auto;
+  z-index: 0;
+  pointer-events: none;
+}
+.ob-wave--top {
+  bottom: auto;
+  top: 0;
+  transform: scaleY(-1);
+  opacity: 0.7;
+}
+
+/* Nội dung nằm trên sóng. */
+.ob-body {
+  position: relative;
+  z-index: 1;
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Căn giữa dọc (splash, success, các màn ngắn). */
+.ob-center {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+/* ---------- Typography ---------- */
+
+.ob-title {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ob-heading);
+  text-align: center;
+}
+.ob-subtitle {
+  margin: 0.5rem 0 0;
+  font-size: 0.95rem;
+  color: var(--color-text-muted);
+  text-align: center;
+  line-height: 1.45;
+}
+
+/* ---------- Form ---------- */
+
+.ob-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+.ob-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.ob-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+.ob-input {
+  width: 100%;
+  font: inherit;
+  font-size: 16px;
+  color: var(--color-text);
+  background: var(--ob-input-bg);
+  border: 1.5px solid var(--ob-input-border);
+  border-radius: 14px;
+  padding: 0.95rem 1.05rem;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.ob-input::placeholder {
+  color: var(--color-text-muted);
+  opacity: 0.7;
+}
+.ob-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-soft-strong);
+}
+/* Biến thể viền tím trên nền trắng (màn Kiểm tra thông tin eKYC). */
+.ob-input--outline {
+  background: var(--color-surface);
+  border-color: var(--color-primary);
+  border-radius: 14px;
+}
+
+/* Ô nhập kèm nút con mắt (mật khẩu). */
+.ob-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.ob-input-wrap .ob-input {
+  padding-right: 3rem;
+}
+.ob-eye {
+  position: absolute;
+  right: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+/* Nút phụ align phải kiểu "Quên mật khẩu?" */
+.ob-field-hint {
+  align-self: flex-end;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+/* ---------- Nút chính gradient ---------- */
+
+.ob-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 54px;
+  padding: 0.9rem 1.25rem;
+  border: none;
+  border-radius: 14px;
+  background: var(--ob-gradient);
+  color: #fff;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 12px 24px -10px rgba(108, 75, 244, 0.6);
+  transition: filter 0.15s, transform 0.1s, opacity 0.15s;
+}
+.ob-btn:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+.ob-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.ob-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+.ob-btn--ghost {
+  background: transparent;
+  color: var(--color-primary);
+  box-shadow: none;
+  min-height: 44px;
+  font-weight: 700;
+}
+
+.ob-link {
+  color: var(--color-primary);
+  font-weight: 700;
+  text-decoration: none;
+}
+.ob-footnote {
+  margin: 0;
+  text-align: center;
+  font-size: 0.92rem;
+  color: var(--color-text-muted);
+}
+
+/* ---------- Logo thương hiệu (splash / login) ---------- */
+
+.ob-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+.ob-brand-mark {
+  width: 96px;
+  height: 96px;
+}
+.ob-brand-word {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--ob-heading);
+}
+.ob-brand-word b {
+  color: var(--color-primary);
+}
+.ob-brand-tagline {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: var(--color-primary);
+  text-transform: uppercase;
+}
+.ob-brand-tagline::before,
+.ob-brand-tagline::after {
+  content: "";
+  width: 22px;
+  height: 1px;
+  background: var(--color-primary);
+  opacity: 0.6;
+}
+.ob-brand-tagline--light::before,
+.ob-brand-tagline--light::after {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+/* ---------- Password strength meter ---------- */
+
+.ob-strength {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+.ob-strength-label {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+.ob-strength-bars {
+  display: flex;
+  gap: 0.4rem;
+}
+.ob-strength-seg {
+  flex: 1;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--color-border);
+}
+.ob-strength-seg--red {
+  background: var(--color-danger);
+}
+.ob-strength-seg--orange {
+  background: var(--color-warning);
+}
+.ob-strength-seg--green {
+  background: var(--color-success);
+}
+.ob-req {
+  list-style: none;
+  margin: 0.1rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.ob-req li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+.ob-req li.ok {
+  color: var(--color-text);
+}
+.ob-req-dot {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  color: var(--color-border);
+}
+.ob-req li.ok .ob-req-dot {
+  color: var(--color-success);
+}
+
+/* ---------- Checkbox điều khoản ---------- */
+
+.ob-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  font-size: 0.92rem;
+  color: var(--color-text);
+  cursor: pointer;
+}
+.ob-check input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.ob-check-box {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  transition: background 0.15s, border-color 0.15s;
+}
+.ob-check input:checked + .ob-check-box {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.ob-check input:focus-visible + .ob-check-box {
+  box-shadow: 0 0 0 3px var(--color-primary-soft-strong);
+}
+.ob-check-box svg {
+  width: 14px;
+  height: 14px;
+  opacity: 0;
+}
+.ob-check input:checked + .ob-check-box svg {
+  opacity: 1;
+}
+
+/* ---------- OTP ---------- */
+
+.ob-otp {
+  display: flex;
+  justify-content: center;
+  gap: 0.55rem;
+}
+.ob-otp-box {
+  width: 46px;
+  height: 58px;
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-primary);
+  border-radius: 12px;
+  caret-color: var(--color-primary);
+}
+.ob-otp-box:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--color-primary-soft-strong);
+}
+.ob-otp-timer {
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+}
+.ob-otp-timer b {
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Success screen (check tròn + sparkles) ---------- */
+
+.ob-success-badge {
+  position: relative;
+  width: 168px;
+  height: 168px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+.ob-success-circle {
+  width: 128px;
+  height: 128px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 18px 40px -12px rgba(108, 75, 244, 0.6);
+  animation: ob-pop 0.4s ease;
+}
+.ob-success-circle svg {
+  width: 60px;
+  height: 60px;
+  color: #fff;
+}
+@keyframes ob-pop {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+.ob-spark {
+  position: absolute;
+  color: var(--color-secondary);
+}
+
+/* ---------- Camera (chụp CCCD) ---------- */
+
+.ob-camera {
+  position: relative;
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100%;
+  padding: calc(3.2rem + env(safe-area-inset-top, 0px)) 1.5rem
+    calc(2rem + env(safe-area-inset-bottom, 0px));
+  background: var(--ob-screen-bg);
+  overflow: hidden;
+}
+.ob-frame {
+  position: relative;
+  width: min(340px, 82%);
+  aspect-ratio: 1.585 / 1; /* tỉ lệ thẻ CCCD (ISO ID-1) */
+  margin-top: auto;
+  margin-bottom: auto;
+  z-index: 1;
+}
+.ob-frame-fill {
+  position: absolute;
+  inset: 8%;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #e6e2ee, #d3cee0);
+}
+.ob-frame-corner {
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  border: 3px solid var(--ob-heading);
+}
+.ob-frame-corner.tl {
+  top: 0;
+  left: 0;
+  border-right: none;
+  border-bottom: none;
+  border-top-left-radius: 14px;
+}
+.ob-frame-corner.tr {
+  top: 0;
+  right: 0;
+  border-left: none;
+  border-bottom: none;
+  border-top-right-radius: 14px;
+}
+.ob-frame-corner.bl {
+  bottom: 0;
+  left: 0;
+  border-right: none;
+  border-top: none;
+  border-bottom-left-radius: 14px;
+}
+.ob-frame-corner.br {
+  bottom: 0;
+  right: 0;
+  border-left: none;
+  border-top: none;
+  border-bottom-right-radius: 14px;
+}
+.ob-camera-controls {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 340px;
+  margin-top: 1.5rem;
+}
+.ob-camera-icon-btn {
+  width: 48px;
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--ob-heading);
+  cursor: pointer;
+}
+.ob-shutter {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: transparent;
+  border: 5px solid #cfc9db;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.ob-shutter:active {
+  transform: scale(0.93);
+}
+
+/* ---------- Xác thực khuôn mặt (vòng ring + wireframe) ---------- */
+
+.ob-face-ring-wrap {
+  position: relative;
+  display: inline-flex;
+}
+.ob-scan-label {
+  text-align: center;
+  margin: 1.5rem 0 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.ob-face-ring {
+  position: relative;
+  width: min(280px, 74vw);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    conic-gradient(
+      from -90deg,
+      var(--color-primary) 0deg,
+      var(--color-primary) 300deg,
+      var(--color-border) 300deg,
+      var(--color-border) 360deg
+    );
+  padding: 6px;
+}
+.ob-face-ring--scan {
+  animation: ob-spin 1.6s linear infinite;
+}
+/* Chống xoay ngược để khuôn mặt bên trong đứng yên khi vòng ring quay. */
+.ob-face-ring--scan .ob-face-ring-inner {
+  animation: ob-spin-rev 1.6s linear infinite;
+}
+@keyframes ob-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes ob-spin-rev {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+.ob-face-ring-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: var(--color-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.ob-face-bracket {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border: 2.5px solid var(--color-primary);
+  z-index: 2;
+}
+.ob-face-bracket.tl { top: 26%; left: 26%; border-right: none; border-bottom: none; }
+.ob-face-bracket.tr { top: 26%; right: 26%; border-left: none; border-bottom: none; }
+.ob-face-bracket.bl { bottom: 26%; left: 26%; border-right: none; border-top: none; }
+.ob-face-bracket.br { bottom: 26%; right: 26%; border-left: none; border-top: none; }
+
+/* ---------- Card hướng dẫn (khuôn mặt / danh tính) ---------- */
+
+.ob-guide {
+  border: 1.5px solid var(--color-primary);
+  border-radius: 18px;
+  padding: 1.15rem 1.25rem;
+  background: var(--color-surface);
+}
+.ob-guide-title {
+  margin: 0 0 0.85rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+.ob-guide-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.ob-guide-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.95rem;
+  color: var(--color-text);
+}
+.ob-guide-list svg {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  color: var(--color-primary);
+}
+
+/* Checklist gạch đầu dòng có chấm tick tím (màn Xác minh danh tính). */
+.ob-tick-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+.ob-tick-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+.ob-tick {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  color: var(--color-primary);
+}
+
+/* ---------- Ô nhập SĐT có tiền tố +84 ---------- */
+.ob-phone {
+  display: flex;
+  gap: 0.6rem;
+}
+.ob-phone-prefix {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0 0.9rem;
+  border-radius: 14px;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-weight: 700;
+  font-size: 1rem;
+  white-space: nowrap;
+}
+.ob-phone-input {
+  flex: 1;
+}
+
+/* ---------- Thanh trên (cờ VN + icon) ---------- */
+.ob-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+.ob-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--ob-heading);
+}
+.ob-flag-emoji {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+.ob-topbar-icons {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: var(--ob-heading);
+}
+
+/* Nút "Chụp lại CCCD" (link ghost căn giữa). */
+.ob-retake {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  align-self: center;
+  padding: 0.3rem 0.5rem;
+  color: var(--color-primary);
+  font-weight: 600;
+  font-size: 0.92rem;
+  text-decoration: none;
+}
+
+/* Spacer đẩy nút xuống đáy màn. */
+.ob-spacer {
+  flex: 1 1 auto;
+  min-height: 1.5rem;
+}
+.ob-stack-gap {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+/* ================================================================
+   TRANG CHỦ (Màn hình chính) — theo mẫu Figma
+   ================================================================ */
+
+.home {
+  padding: calc(1rem + env(safe-area-inset-top, 0px)) 1.1rem 1.5rem;
+  background: var(--color-bg);
+}
+
+/* ---- Header lời chào ---- */
+.home-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+.home-greet {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-width: 0;
+}
+.home-avatar {
+  flex: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+}
+.home-avatar svg {
+  width: 26px;
+  height: 26px;
+}
+.home-greet-hi {
+  margin: 0;
+  font-size: 0.98rem;
+  color: var(--color-text-muted);
+}
+.home-greet-hi b {
+  color: var(--color-text);
+  font-weight: 700;
+}
+.home-greet-sub {
+  margin: 0.1rem 0 0;
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+}
+.home-header-actions {
+  display: flex;
+  gap: 0.55rem;
+  flex: none;
+}
+.home-icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+}
+.home-icon-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ---- 2 thẻ thống kê ---- */
+.home-stats {
+  display: grid;
+  grid-template-columns: 1fr 1.18fr;
+  gap: 0.8rem;
+}
+.home-stat {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-height: 118px;
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.home-stat--soft {
+  background: linear-gradient(150deg, #efe9fd 0%, #e2d6fa 100%);
+  color: #4527a0;
+}
+.home-stat--brand {
+  background: linear-gradient(140deg, #a98bf5 0%, #7c4dff 55%, #6c4bf4 100%);
+  color: #fff;
+  box-shadow: var(--shadow-md);
+}
+.home-stat-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.4);
+  margin-bottom: 0.1rem;
+}
+.home-stat--brand .home-stat-icon {
+  background: rgba(255, 255, 255, 0.22);
+}
+.home-stat-icon svg {
+  width: 20px;
+  height: 20px;
+}
+.home-stat-label {
+  font-size: 0.76rem;
+  font-weight: 600;
+  opacity: 0.9;
+  line-height: 1.25;
+}
+.home-stat-value {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 1.55rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+.home-chevron {
+  width: 18px;
+  height: 18px;
+  opacity: 0.85;
+}
+.home-stat-delta {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #7ef7c2;
+}
+
+/* ---- Section title ---- */
+.home-section-title {
+  margin: 1.6rem 0 0.85rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+/* ---- Hoạt động nhanh ---- */
+.home-actions {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+}
+.home-action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: var(--color-text);
+}
+.home-action-tile {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 16px;
+  border: 1.5px solid var(--color-primary);
+  background: var(--color-surface);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, transform 0.1s;
+}
+.home-action:active .home-action-tile {
+  transform: scale(0.95);
+  background: var(--color-primary-soft);
+}
+.home-action-tile svg {
+  width: 26px;
+  height: 26px;
+}
+.home-action-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* ---- Cần đóng hôm nay ---- */
+.home-due {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.2rem 1.25rem;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(120deg, #efe4fb 0%, #e6d3f8 60%, #f3d9f4 100%);
+  box-shadow: var(--shadow-sm);
+}
+.home-due-name {
+  margin: 0 0 0.4rem;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--color-primary-hover);
+}
+.home-due-amount {
+  margin: 0;
+  font-size: 1.7rem;
+  font-weight: 800;
+  color: #17151f;
+  letter-spacing: -0.01em;
+}
+.home-due-right {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+  flex: none;
+}
+.home-due-timer {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #17151f;
+  font-variant-numeric: tabular-nums;
+}
+.home-due-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 0.45rem 0.9rem;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ---- Hụi của bạn ---- */
+.home-hui-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+.home-hui {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 1.25rem;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-muted);
+  box-shadow: var(--shadow-sm);
+}
+.home-hui-name {
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--color-primary-hover);
+}
+.home-hui-due {
+  margin: 0 0 0.3rem;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+.home-hui-amount {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--color-text);
+}
+.home-hui-btn {
+  flex: none;
+  border-radius: 8px;
+  padding: 0.55rem 1.1rem;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+.home-hui-btn:hover {
+  background: var(--color-primary-hover);
+}

@@ -1,232 +1,175 @@
-"use client";
-
-import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useWallet } from "@/lib/wallet-context";
-import { useKycStatus } from "@/lib/use-kyc-status";
-import { creditScoreLevel } from "@/lib/credit-score-level";
 
-type Membership = {
-  groupId: string;
-  groupName: string;
-  hasWon: boolean;
-  wonRound: number | null;
-  rounds: { roundNumber: number }[];
-};
-
-type DashboardSummary = {
-  creditScore: { score: number };
-  memberships: Membership[];
-};
-
-const SERVICES = [
+// Trang chủ (Màn hình chính) — dựng theo mẫu Figma. Dữ liệu hiện là mẫu tĩnh;
+// sẽ nối API (dashboard, hụi, ví) ở giai đoạn "chức năng thật".
+const QUICK_ACTIONS = [
   {
     href: "/create",
-    label: "Tạo dây hụi",
-    icon: (
-      <>
-        <path d="M8 3.5h6l4 4V20a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1Z" />
-        <path d="M13.5 3.5V8h4" />
-        <path d="M12 12.2v5M9.5 14.7h5" />
-      </>
-    ),
+    label: "Tạo hụi",
+    icon: <path d="M12 5v14M5 12h14" />,
   },
   {
     href: "/groups",
-    label: "Tham gia",
+    label: "Dây hụi",
     icon: (
       <>
         <circle cx="9" cy="8.5" r="3" />
         <path d="M2.5 20c0-3.4 2.9-6 6.5-6s6.5 2.6 6.5 6" />
-        <path d="M17.5 8.5v5.5M14.7 11.25h5.6" />
-      </>
-    ),
-  },
-  {
-    href: "/groups",
-    label: "Đấu giá",
-    icon: (
-      <>
-        <path d="M3 17.5 9.5 11l4 4L21 7.5" />
-        <path d="M15 6.5h6v6" />
+        <path d="M17 8.5a2.6 2.6 0 0 1 0 5M18.5 6a5 5 0 0 1 0 10" />
       </>
     ),
   },
   {
     href: "/dashboard",
-    label: "Dashboard",
-    icon: <path d="M4 19V10m6 9V5m6 14v-7M3 19h18" />,
-  },
-  {
-    href: "/kyc",
-    label: "Xác thực eKYC",
+    label: "Ví",
     icon: (
       <>
-        <path d="M12 3 4.5 6v5.3c0 4.5 3.1 8.2 7.5 9.7 4.4-1.5 7.5-5.2 7.5-9.7V6L12 3Z" />
-        <path d="M9 11.6 11.2 14 15.5 9.2" />
+        <rect x="3" y="6" width="18" height="13" rx="2.5" />
+        <path d="M3 10h18M16.5 14.5h.01" />
       </>
     ),
   },
   {
-    href: "/dashboard#history",
-    label: "Lịch sử",
+    href: "/dashboard",
+    label: "Nhận tiền",
     icon: (
       <>
-        <circle cx="12" cy="12" r="8.5" />
-        <path d="M12 7.5v5l3.2 2" />
+        <path d="M12 3v10m0 0 3.5-3.5M12 13 8.5 9.5" />
+        <path d="M4 15c0 3 3.6 5 8 5s8-2 8-5" />
       </>
     ),
   },
 ];
 
-function ServiceIcon({ children }: { children: React.ReactNode }) {
+const MY_HUI = [
+  { name: "Hụi XXX", due: "05/02", amount: "500.000 đ" },
+  { name: "Hụi YYY", due: "12/02", amount: "1.000.000 đ" },
+];
+
+function ActionIcon({ children }: { children: React.ReactNode }) {
   return (
-    <svg
-      className="service-icon"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.9}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       {children}
     </svg>
   );
 }
 
-function membershipSummary(m: Membership) {
-  if (m.hasWon) return `Đã hốt kỳ ${m.wonRound}`;
-  if (m.rounds.length === 0) return "Chưa có kỳ đấu giá";
-  return `Đang ở kỳ ${m.rounds[m.rounds.length - 1].roundNumber} · ${m.rounds.length} kỳ đã mở`;
+function Chevron() {
+  return (
+    <svg className="home-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="m9 6 6 6-6 6" />
+    </svg>
+  );
 }
 
 export default function Home() {
-  const { address, connect, isConnecting } = useWallet();
-  const { status: kycStatus, loading: kycLoading } = useKycStatus(address);
-  const [summary, setSummary] = useState<DashboardSummary | null>(null);
-  const [loadingSummary, setLoadingSummary] = useState(false);
-
-  const loadSummary = useCallback(async () => {
-    if (!address) {
-      setSummary(null);
-      return;
-    }
-    setLoadingSummary(true);
-    try {
-      const res = await fetch(`/api/dashboard?walletAddress=${address}`);
-      if (res.ok) {
-        const data = await res.json();
-        setSummary(data);
-      } else {
-        setSummary(null);
-      }
-    } finally {
-      setLoadingSummary(false);
-    }
-  }, [address]);
-
-  useEffect(() => {
-    loadSummary();
-  }, [loadSummary]);
-
-  const level = summary ? creditScoreLevel(summary.creditScore.score) : null;
-
-  const ekycBadge = (() => {
-    if (!address) return null;
-    if (kycLoading) return { label: "Đang kiểm tra...", color: "rgba(255,255,255,0.7)" };
-    if (kycStatus === "VERIFIED") return { label: "eKYC đã xác thực", color: "var(--color-success)" };
-    if (kycStatus === "REJECTED") return { label: "eKYC bị từ chối", color: "var(--color-danger)" };
-    return { label: "eKYC chưa xác thực", color: "var(--color-warning)" };
-  })();
-
   return (
-    <main className="page">
-      {address ? (
-        <div className="hero">
-          <p className="hero-label">Credit Score</p>
-          <p className="hero-score">{summary ? summary.creditScore.score : loadingSummary ? "…" : "—"}</p>
-          <div className="hero-row">
-            {level && (
-              <span className="hero-badge">
-                <span className="hero-badge-dot" style={{ background: `var(--color-${level.variant})` }} />
-                {level.label}
-              </span>
-            )}
-            {ekycBadge && (
-              <span className="hero-badge">
-                <span className="hero-badge-dot" style={{ background: ekycBadge.color }} />
-                {ekycBadge.label}
-              </span>
-            )}
+    <main className="home">
+      {/* Header lời chào */}
+      <header className="home-header">
+        <div className="home-greet">
+          <span className="home-avatar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="8.5" r="3.6" />
+              <path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6" />
+            </svg>
+          </span>
+          <div className="home-greet-text">
+            <p className="home-greet-hi">
+              Xin chào, <b>Nguyễn Văn A</b>
+            </p>
+            <p className="home-greet-sub">Chào mừng trở lại</p>
           </div>
         </div>
-      ) : (
-        <div className="hero">
-          <div className="hero-connect">
-            <div>
-              <p className="hero-label">SmartROSCA</p>
-              <p style={{ margin: "0.3rem 0 0", fontSize: "1.05rem", fontWeight: 600 }}>
-                Kết nối ví để xem điểm tín nhiệm &amp; dây hụi của bạn
-              </p>
-            </div>
-            <button
-              className="btn"
-              style={{ background: "#ffffff", color: "var(--color-primary)", alignSelf: "flex-start" }}
-              onClick={connect}
-              disabled={isConnecting}
-            >
-              {isConnecting ? "Đang kết nối..." : "Kết nối ví"}
-            </button>
-          </div>
+        <div className="home-header-actions">
+          <button className="home-icon-btn" aria-label="Thông báo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6Z" />
+              <path d="M10 20a2 2 0 0 0 4 0" />
+            </svg>
+          </button>
+          <button className="home-icon-btn" aria-label="Cài đặt">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1v.2a2 2 0 0 1-4 0v-.1A1.6 1.6 0 0 0 7 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 2.6 14v-.1a2 2 0 0 1 0-3.8h.2A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 10 4.6h.1A1.6 1.6 0 0 0 11 2.6v-.2a2 2 0 0 1 4 0v.2A1.6 1.6 0 0 0 17 4.6a1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1A1.6 1.6 0 0 0 21.4 10v.1a1.6 1.6 0 0 0 0 3.8Z" />
+            </svg>
+          </button>
         </div>
-      )}
+      </header>
 
-      <p className="section-title" style={{ marginTop: "1.5rem" }}>
-        Dịch vụ
-      </p>
-      <div className="service-grid">
-        {SERVICES.map((s) => (
-          <Link key={s.label} href={s.href} className="service-item">
-            <span className="service-icon-circle">
-              <ServiceIcon>{s.icon}</ServiceIcon>
+      {/* 2 thẻ thống kê */}
+      <div className="home-stats">
+        <Link href="/groups" className="home-stat home-stat--soft">
+          <span className="home-stat-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="9" cy="8.5" r="3" />
+              <path d="M2.5 19c0-3.2 2.9-5.5 6.5-5.5s6.5 2.3 6.5 5.5" />
+              <path d="M17 8.5a2.6 2.6 0 0 1 0 5" />
+            </svg>
+          </span>
+          <span className="home-stat-label">Số dây hụi đang tham gia</span>
+          <span className="home-stat-value">
+            5 <Chevron />
+          </span>
+        </Link>
+
+        <Link href="/dashboard" className="home-stat home-stat--brand">
+          <span className="home-stat-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="6" width="18" height="13" rx="2.5" />
+              <path d="M3 10h18M16.5 14.5h.01" />
+            </svg>
+          </span>
+          <span className="home-stat-label">Tổng tài sản</span>
+          <span className="home-stat-value">
+            12.500.000 <Chevron />
+          </span>
+          <span className="home-stat-delta">+500.000 đ tháng này</span>
+        </Link>
+      </div>
+
+      {/* Hoạt động nhanh */}
+      <h2 className="home-section-title">Hoạt động nhanh</h2>
+      <div className="home-actions">
+        {QUICK_ACTIONS.map((a) => (
+          <Link key={a.label} href={a.href} className="home-action">
+            <span className="home-action-tile">
+              <ActionIcon>{a.icon}</ActionIcon>
             </span>
-            <span className="service-label">{s.label}</span>
+            <span className="home-action-label">{a.label}</span>
           </Link>
         ))}
       </div>
 
-      {address && (
-        <>
-          <p className="section-title">Dây hụi của tôi</p>
-          {loadingSummary && !summary && <p className="muted">Đang tải...</p>}
-          {summary && summary.memberships.length === 0 && (
-            <p className="empty-state">Bạn chưa tham gia dây hụi nào.</p>
-          )}
-          {summary?.memberships.map((m) => (
-            <Link key={m.groupId} href={`/groups/${m.groupId}/bid`} className="group-card">
-              <span className="group-card-avatar">{m.groupName.charAt(0).toUpperCase()}</span>
-              <span className="group-card-body">
-                <p className="group-card-title">{m.groupName}</p>
-                <p className="group-card-meta">{membershipSummary(m)}</p>
-              </span>
-              <svg
-                className="group-card-chevron"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <path d="m9 6 6 6-6 6" />
-              </svg>
+      {/* Cần đóng hôm nay */}
+      <h2 className="home-section-title">Cần đóng hôm nay</h2>
+      <div className="home-due">
+        <div className="home-due-info">
+          <p className="home-due-name">Đóng hụi XXX</p>
+          <p className="home-due-amount">500.000 đ</p>
+        </div>
+        <div className="home-due-right">
+          <span className="home-due-timer">00 : 00 : 00</span>
+          <button className="home-due-btn">Đóng ngay</button>
+        </div>
+      </div>
+
+      {/* Hụi của bạn */}
+      <h2 className="home-section-title">Hụi của bạn</h2>
+      <div className="home-hui-list">
+        {MY_HUI.map((h) => (
+          <div key={h.name} className="home-hui">
+            <div className="home-hui-info">
+              <p className="home-hui-name">{h.name}</p>
+              <p className="home-hui-due">Kỳ hạn : {h.due}</p>
+              <p className="home-hui-amount">{h.amount}</p>
+            </div>
+            <Link href="/groups" className="home-hui-btn">
+              Chi tiết
             </Link>
-          ))}
-        </>
-      )}
+          </div>
+        ))}
+      </div>
     </main>
   );
 }

@@ -29,8 +29,13 @@ const LEFT_TABS: Tab[] = [
 const RIGHT_TABS: Tab[] = [
   {
     href: "/dashboard",
-    label: "Dashboard",
-    icon: <path d="M4 19V10m6 9V5m6 14v-7M3 19h18" />,
+    label: "Ví",
+    icon: (
+      <>
+        <rect x="3" y="6" width="18" height="13" rx="2.5" />
+        <path d="M3 10h18M16.5 14.5h.01" />
+      </>
+    ),
   },
   {
     href: "/profile",
@@ -93,7 +98,6 @@ export function BottomTabBar() {
             <path d="M12 5v14M5 12h14" />
           </svg>
         </span>
-        <span className="phone-fab-label">Tạo hụi</span>
       </Link>
 
       {RIGHT_TABS.map((tab) => (

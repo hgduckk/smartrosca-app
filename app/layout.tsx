@@ -1,12 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import Link from "next/link";
 import "./globals.css";
 import { WalletProvider } from "@/lib/wallet-context";
 import { ToastProvider } from "@/components/ToastProvider";
-import { ConnectWalletButton } from "@/components/ConnectWalletButton";
-import { BottomTabBar } from "@/components/BottomTabBar";
-import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { AppChrome } from "@/components/AppChrome";
 
 const APP_NAME = "Quản lý Hụi";
 const APP_DESCRIPTION = "Ứng dụng quản lý hụi thông minh";
@@ -104,25 +100,7 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: noFlashThemeScript }} />
         <WalletProvider>
           <ToastProvider>
-            <div className="phone-outer">
-              <div className="phone-frame">
-                <div className="phone-notch" aria-hidden="true" />
-                <div className="phone-screen">
-                  <header className="app-header">
-                    <Link href="/" className="app-brand">
-                      SmartROSCA
-                    </Link>
-                    <div className="row" style={{ gap: "0.5rem", flexWrap: "nowrap" }}>
-                      <ThemeToggle />
-                      <ConnectWalletButton />
-                    </div>
-                  </header>
-                  <div className="phone-content">{children}</div>
-                  <PWAInstallPrompt />
-                </div>
-                <BottomTabBar />
-              </div>
-            </div>
+            <AppChrome>{children}</AppChrome>
           </ToastProvider>
         </WalletProvider>
       </body>
