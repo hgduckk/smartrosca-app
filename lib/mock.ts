@@ -42,6 +42,27 @@ const ETH = (n: number) => BigInt(Math.round(n * 1e6)).toString() + "00000000000
 
 // --- Dữ liệu mẫu ---------------------------------------------------------
 
+// Khoá lưu tạm thông tin đăng ký (trước khi đăng nhập) để các bước eKYC/OTP/đăng
+// nhập trong luồng onboarding dùng lại. Chỉ tồn tại trong phiên trình duyệt.
+export const PENDING_REG_KEY = "rosca-pending-reg";
+
+export type PendingReg = {
+  name: string;
+  cccd: string;
+  phone: string;
+  email: string;
+  password: string;
+};
+
+export function readPendingReg(): PendingReg | null {
+  try {
+    const raw = sessionStorage.getItem(PENDING_REG_KEY);
+    return raw ? (JSON.parse(raw) as PendingReg) : null;
+  } catch {
+    return null;
+  }
+}
+
 // Kết quả OCR giả lập cho CCCD — dùng ở bước "Kiểm tra thông tin" của eKYC.
 // Giai đoạn thật sẽ thay bằng kết quả nhận diện từ dịch vụ OCR/eKYC.
 export function mockCccdOcr() {

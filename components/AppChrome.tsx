@@ -29,12 +29,14 @@ function isBareRoute(pathname: string) {
 }
 
 // Route công khai — xem được khi CHƯA đăng nhập. Mọi route khác cần phiên đăng
-// nhập (giả lập). Lưu ý: luồng eKYC /verify/* là route đã-đăng-nhập (sau đăng ký).
+// nhập (giả lập). Luồng onboarding chạy TRƯỚC khi đăng nhập:
+// Đăng ký → eKYC (/verify/*) → OTP (/verify-otp) → Đăng nhập (/login) → app.
 const PUBLIC_PREFIXES = [
   "/splash",
   "/login",
   "/register",
   "/forgot-password",
+  "/verify", // luồng eKYC chạy trước đăng nhập: /verify, /verify/cccd-front, ...
   "/verify-otp",
   "/reset-password",
   "/reset-success",

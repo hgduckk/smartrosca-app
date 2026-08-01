@@ -9,11 +9,15 @@ export default function VerifySuccessPage() {
     <div className="ob-screen">
       <div className="ob-body ob-center">
         <SuccessCheck />
-        <h1 className="ob-title">Xác thực thành công</h1>
-        <p className="ob-subtitle">Tài khoản của bạn đã được xác thực</p>
+        <h1 className="ob-title">Tạo tài khoản thành công</h1>
+        <p className="ob-subtitle">
+          Tài khoản của bạn đã được tạo và xác thực.
+          <br />
+          Vui lòng đăng nhập để tiếp tục.
+        </p>
 
-        <Link href="/" className="ob-btn" style={{ marginTop: "2.5rem" }}>
-          Hoàn tất
+        <Link href="/login" className="ob-btn" style={{ marginTop: "2.5rem" }}>
+          Đăng nhập
         </Link>
       </div>
       <WaveBg />

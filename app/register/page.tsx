@@ -5,11 +5,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PasswordField } from "@/components/onboarding/PasswordField";
 import { WaveBg } from "@/components/onboarding/WaveBg";
-import { useAuth } from "@/lib/auth-context";
+import { PENDING_REG_KEY } from "@/lib/mock";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { register } = useAuth();
   const [form, setForm] = useState({ name: "", cccd: "", phone: "", email: "", password: "" });
   const [agree, setAgree] = useState(false);
 
@@ -18,9 +17,15 @@ export default function RegisterPage() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    // Bản test: tạo phiên giả lập rồi vào luồng eKYC. Giai đoạn thật sẽ tạo tài
-    // khoản + gửi OTP trước.
-    register({ name: form.name, account: form.phone || form.cccd });
+    // Luồng: Đăng ký → eKYC (CCCD + khuôn mặt) → OTP → Đăng nhập → vào app.
+    // Bản test CHƯA tạo phiên ở đây (chưa đăng nhập) — chỉ lưu tạm thông tin đăng
+    // ký để các bước sau dùng; phiên đăng nhập tạo ở màn Đăng nhập cuối luồng.
+    // Giai đoạn thật: tạo tài khoản + gửi OTP tại đây.
+    try {
+      sessionStorage.setItem(PENDING_REG_KEY, JSON.stringify(form));
+    } catch {
+      /* sessionStorage không khả dụng — bỏ qua, luồng vẫn tiếp tục */
+    }
     router.push("/verify");
   }
 

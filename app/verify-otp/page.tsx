@@ -4,11 +4,19 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { OtpInput } from "@/components/onboarding/OtpInput";
 import { WaveBg } from "@/components/onboarding/WaveBg";
+import { readPendingReg } from "@/lib/mock";
 
 function fmt(s: number) {
   const m = Math.floor(s / 60);
   const ss = s % 60;
   return `${String(m).padStart(2, "0")}:${String(ss).padStart(2, "0")}`;
+}
+
+// Che số điện thoại: giữ 3 số cuối, ẩn phần còn lại.
+function maskPhone(p?: string) {
+  const d = (p ?? "").replace(/\D/g, "");
+  if (d.length < 4) return "xxxx xxx xxx";
+  return `${"*".repeat(d.length - 3)}${d.slice(-3)}`;
 }
 
 function OtpScreen() {
@@ -17,6 +25,11 @@ function OtpScreen() {
   const flow = params.get("flow"); // "reset" | null
   const [code, setCode] = useState("");
   const [left, setLeft] = useState(60);
+  const [phone, setPhone] = useState<string>("xxxx xxx xxx");
+
+  useEffect(() => {
+    if (flow !== "reset") setPhone(maskPhone(readPendingReg()?.phone));
+  }, [flow]);
 
   useEffect(() => {
     if (left <= 0) return;
@@ -41,7 +54,7 @@ function OtpScreen() {
           <p className="ob-subtitle">
             Vui lòng nhập mã OTP vừa gửi đến
             <br />
-            xxxx xxx xxx
+            {phone}
           </p>
         </div>
 

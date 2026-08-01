@@ -1,24 +1,40 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BrandLogo } from "@/components/onboarding/BrandLogo";
 import { PasswordField } from "@/components/onboarding/PasswordField";
 import { WaveBg } from "@/components/onboarding/WaveBg";
 import { useAuth } from "@/lib/auth-context";
+import { PENDING_REG_KEY, readPendingReg } from "@/lib/mock";
 
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
   const [account, setAccount] = useState("");
   const [password, setPassword] = useState("");
+  const [regName, setRegName] = useState<string>("");
+
+  // Vừa đăng ký xong: điền sẵn SĐT/CCCD để đăng nhập lần đầu cho nhanh.
+  useEffect(() => {
+    const reg = readPendingReg();
+    if (reg) {
+      setAccount(reg.phone || reg.cccd || "");
+      setRegName(reg.name || "");
+    }
+  }, []);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     // Bản test: đăng nhập giả lập (chấp nhận mọi thông tin). Giai đoạn thật sẽ
-    // gọi API xác thực. Lưu phiên rồi về trang chủ.
-    login(account.trim() || "0900000000");
+    // gọi API xác thực. Tạo phiên (kèm tên đã đăng ký nếu có) rồi về trang chủ.
+    login(account.trim() || "0900000000", regName || undefined);
+    try {
+      sessionStorage.removeItem(PENDING_REG_KEY);
+    } catch {
+      /* bỏ qua */
+    }
     router.push("/");
   }
 

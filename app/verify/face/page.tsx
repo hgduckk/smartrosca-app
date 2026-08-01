@@ -51,7 +51,8 @@ export default function FacePage() {
 
   useEffect(() => {
     if (!scanning) return;
-    const t = setTimeout(() => router.push("/verify/success"), 2600);
+    // Xác thực khuôn mặt xong → gửi OTP để xác nhận số điện thoại.
+    const t = setTimeout(() => router.push("/verify-otp"), 2600);
     return () => clearTimeout(t);
   }, [scanning, router]);
 

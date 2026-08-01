@@ -4,8 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { WaveBg } from "@/components/onboarding/WaveBg";
-import { useAuth } from "@/lib/auth-context";
-import { mockCccdOcr } from "@/lib/mock";
+import { mockCccdOcr, readPendingReg } from "@/lib/mock";
 
 // Thông tin được OCR từ ảnh CCCD điền sẵn. Bản test: dùng dữ liệu giả lập
 // (mockCccdOcr) sau khi "nhận diện". Giai đoạn thật thay bằng kết quả OCR thật.
@@ -21,7 +20,6 @@ const FIELDS: { key: string; label: string }[] = [
 
 export default function ReviewPage() {
   const router = useRouter();
-  const { user } = useAuth();
   const [values, setValues] = useState<Record<string, string>>({});
   const [confirm, setConfirm] = useState(true);
   const [extracting, setExtracting] = useState(true);
@@ -41,12 +39,17 @@ export default function ReviewPage() {
       /* bỏ qua */
     }
     const ocr = mockCccdOcr();
+    const reg = readPendingReg();
     const t = setTimeout(() => {
-      setValues({ ...ocr, name: user?.name?.trim() || ocr.name });
+      setValues({
+        ...ocr,
+        name: reg?.name?.trim() || ocr.name,
+        cccd: reg?.cccd?.trim() || ocr.cccd,
+      });
       setExtracting(false);
     }, 1500);
     return () => clearTimeout(t);
-  }, [user]);
+  }, []);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
