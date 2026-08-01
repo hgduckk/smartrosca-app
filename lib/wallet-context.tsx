@@ -57,7 +57,9 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       provider.listAccounts(),
       provider.getNetwork(),
     ]);
-    const address = accounts[0]?.address ?? null;
+    // Chuẩn hoá lowercase để nhất quán với connect()/handleAccountsChanged và với
+    // địa chỉ đã lowercase lưu trong DB (mọi so sánh trong app đều theo lowercase).
+    const address = accounts[0]?.address.toLowerCase() ?? null;
     setState((s) => ({ ...s, address, chainId: Number(network.chainId) }));
     if (address) await syncUser(address);
   }, [syncUser]);
@@ -123,7 +125,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
     const handleAccountsChanged = (...args: unknown[]) => {
       const accounts = args[0] as string[];
-      const address = accounts[0] ?? null;
+      const address = accounts[0]?.toLowerCase() ?? null;
       setState((s) => ({ ...s, address }));
       if (address) syncUser(address);
     };

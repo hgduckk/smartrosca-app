@@ -4,6 +4,8 @@ import { useState, type ChangeEvent, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { parseEther } from "ethers";
 import { RequireVerifiedKyc } from "@/components/RequireVerifiedKyc";
+import { useWallet } from "@/lib/wallet-context";
+import { useToast } from "@/components/ToastProvider";
 import { createGroupOnChain, getBrowserSigner } from "@/lib/contract";
 
 type FormState = {
@@ -26,6 +28,8 @@ const initialForm: FormState = {
 
 function CreateGroupForm() {
   const router = useRouter();
+  const { address } = useWallet();
+  const toast = useToast();
   const [form, setForm] = useState<FormState>(initialForm);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,6 +52,18 @@ function CreateGroupForm() {
 
       if (!Number.isInteger(totalMembers) || totalMembers < 2) {
         throw new Error("Số thành viên phải là số nguyên và tối thiểu là 2.");
+      }
+      if (shareAmountWei <= BigInt(0)) {
+        throw new Error("Phần hụi mỗi kỳ phải lớn hơn 0.");
+      }
+      if (collateralWei <= BigInt(0)) {
+        throw new Error("Số tiền ký quỹ phải lớn hơn 0.");
+      }
+      if (!Number.isInteger(roundDurationSec) || roundDurationSec <= 0) {
+        throw new Error("Thời gian mỗi kỳ không hợp lệ.");
+      }
+      if (!Number.isInteger(bidDurationSec) || bidDurationSec <= 0) {
+        throw new Error("Thời gian đấu giá không hợp lệ.");
       }
 
       // 1. Tạo group trên smart contract trước (nguồn sự thật minh bạch, bất biến).
@@ -74,6 +90,7 @@ function CreateGroupForm() {
           roundDurationSec,
           bidDurationSec,
           createTxHash: txHash,
+          walletAddress: address,
         }),
       });
       if (!res.ok) {
@@ -81,9 +98,12 @@ function CreateGroupForm() {
         throw new Error(data.error ?? "Tạo dây hụi thất bại");
       }
 
+      toast("Tạo dây hụi thành công 🎉", "success");
       router.push("/groups");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Có lỗi xảy ra.");
+      const msg = err instanceof Error ? err.message : "Có lỗi xảy ra.";
+      setError(msg);
+      toast(msg, "error");
     } finally {
       setSubmitting(false);
     }

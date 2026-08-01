@@ -22,8 +22,16 @@ export async function POST(
       settled: true,
       payoutTxHash,
     },
-    include: { winner: true },
+    include: { winner: true, group: true },
   });
+
+  // Nếu vừa giải ngân kỳ cuối (roundNumber == totalMembers) → dây hụi hoàn tất.
+  if (round.roundNumber >= round.group.totalMembers && round.group.status !== "COMPLETED") {
+    await prisma.huiGroup.update({
+      where: { id: round.groupId },
+      data: { status: "COMPLETED" },
+    });
+  }
 
   return NextResponse.json({ round });
 }

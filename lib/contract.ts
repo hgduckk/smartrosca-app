@@ -513,8 +513,10 @@ export function listenForBidPlaced(
 }
 
 // Lắng nghe realtime event MemberDefaulted (thành viên bị đánh dấu vi phạm) từ
-// contract của 1 group — dùng để trừ điểm credit score (xem POST
-// /api/members/default). No-op nếu contract chưa cấu hình.
+// contract của 1 group — dùng để ĐỒNG BỘ HIỂN THỊ danh sách vi phạm cho mọi client
+// đang xem. Việc trừ điểm credit score được làm idempotent một lần qua POST
+// /api/rounds/[id]/default (KHÔNG trừ trong listener để tránh nhân bội theo số người
+// xem). No-op nếu contract chưa cấu hình.
 export function listenForMemberDefaulted(
   groupContractAddress: string,
   onDefault: (memberAddress: string) => void

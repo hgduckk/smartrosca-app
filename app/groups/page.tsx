@@ -4,7 +4,10 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { formatEther } from "ethers";
 import { RequireVerifiedKyc } from "@/components/RequireVerifiedKyc";
+import { PullToRefresh } from "@/components/PullToRefresh";
+import { SkeletonList } from "@/components/Skeleton";
 import { useWallet } from "@/lib/wallet-context";
+import { useToast } from "@/components/ToastProvider";
 import { getBrowserSigner, joinGroupOnChain } from "@/lib/contract";
 
 type Group = {
@@ -29,6 +32,7 @@ function formatEth(wei: string) {
 
 function GroupsList() {
   const { address } = useWallet();
+  const toast = useToast();
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const [joiningId, setJoiningId] = useState<string | null>(null);
@@ -82,9 +86,12 @@ function GroupsList() {
       }
 
       setTxLinks((links) => ({ ...links, [group.id]: txHash }));
+      toast(`Đã tham gia "${group.name}" thành công`, "success");
       await loadGroups();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Có lỗi xảy ra.");
+      const msg = err instanceof Error ? err.message : "Có lỗi xảy ra.";
+      setError(msg);
+      toast(msg, "error");
     } finally {
       setJoiningId(null);
     }
@@ -93,13 +100,15 @@ function GroupsList() {
   if (loading) {
     return (
       <main className="page">
-        <p className="muted">Đang tải danh sách dây hụi...</p>
+        <h1>Các dây hụi đang mở</h1>
+        <SkeletonList count={3} />
       </main>
     );
   }
 
   return (
     <main className="page">
+      <PullToRefresh onRefresh={loadGroups}>
       <h1>Các dây hụi đang mở</h1>
       {error && <p className="error-text">{error}</p>}
       {groups.length === 0 && <p className="empty-state">Chưa có dây hụi nào đang mở.</p>}
@@ -124,9 +133,13 @@ function GroupsList() {
               <button
                 className="btn btn-primary btn-sm"
                 onClick={() => handleJoin(g)}
-                disabled={joiningId === g.id}
+                disabled={joiningId === g.id || g.members.length >= g.totalMembers}
               >
-                {joiningId === g.id ? "Đang tham gia..." : "Tham gia"}
+                {g.members.length >= g.totalMembers
+                  ? "Đã đầy"
+                  : joiningId === g.id
+                    ? "Đang tham gia..."
+                    : "Tham gia"}
               </button>
               <Link href={`/groups/${g.id}/bid`} className="btn btn-outline btn-sm">
                 Vào phòng đấu giá
@@ -146,6 +159,7 @@ function GroupsList() {
           </li>
         ))}
       </ul>
+      </PullToRefresh>
     </main>
   );
 }

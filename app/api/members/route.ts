@@ -23,6 +23,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Chưa có user — kết nối ví trước" }, { status: 404 });
   }
 
+  const group = await prisma.huiGroup.findUnique({
+    where: { id: groupId },
+    include: { members: true },
+  });
+  if (!group) {
+    return NextResponse.json({ error: "Không tìm thấy dây hụi" }, { status: 404 });
+  }
+
+  const alreadyMember = group.members.some((m) => m.userId === user.id);
+  // Chặn tham gia khi dây đã đầy (khớp với contract sẽ revert "Day da du thanh vien").
+  if (!alreadyMember && group.members.length >= group.totalMembers) {
+    return NextResponse.json({ error: "Dây hụi đã đầy thành viên" }, { status: 409 });
+  }
+
   const member = await prisma.huiMember.upsert({
     where: { groupId_userId: { groupId, userId: user.id } },
     update: {},
@@ -32,6 +46,15 @@ export async function POST(req: NextRequest) {
       joinTxHash: typeof joinTxHash === "string" ? joinTxHash : null,
     },
   });
+
+  // Khi đủ số thành viên → dây chuyển sang ACTIVE và rời khỏi danh sách "đang mở".
+  const memberCount = alreadyMember ? group.members.length : group.members.length + 1;
+  if (group.status === "OPEN" && memberCount >= group.totalMembers) {
+    await prisma.huiGroup.update({
+      where: { id: groupId },
+      data: { status: "ACTIVE" },
+    });
+  }
 
   return NextResponse.json({ member });
 }

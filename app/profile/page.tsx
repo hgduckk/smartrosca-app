@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useWallet } from "@/lib/wallet-context";
 import { useKycStatus } from "@/lib/use-kyc-status";
 import { creditScoreLevel } from "@/lib/credit-score-level";
+import { useToast } from "@/components/ToastProvider";
+import { Skeleton } from "@/components/Skeleton";
 
 type CreditScoreEvent = {
   id: string;
@@ -31,6 +33,7 @@ function kycLabel(status: string | null) {
 export default function ProfilePage() {
   const { address, connect, isConnecting } = useWallet();
   const { status: kycStatus, loading: kycLoading } = useKycStatus(address);
+  const toast = useToast();
   const [data, setData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -42,11 +45,17 @@ export default function ProfilePage() {
     setLoading(true);
     try {
       const res = await fetch(`/api/dashboard?walletAddress=${address}`);
-      if (res.ok) setData(await res.json());
+      if (res.ok) {
+        setData(await res.json());
+      } else {
+        toast("Không tải được hồ sơ", "error");
+      }
+    } catch {
+      toast("Không tải được hồ sơ", "error");
     } finally {
       setLoading(false);
     }
-  }, [address]);
+  }, [address, toast]);
 
   useEffect(() => {
     load();
@@ -130,7 +139,15 @@ export default function ProfilePage() {
 
       <div className="card">
         <h2 style={{ marginTop: 0 }}>Credit Score</h2>
-        {loading && !data && <p className="muted">Đang tải...</p>}
+        {loading && !data && (
+          <div className="stack" style={{ gap: "0.6rem" }} aria-busy="true">
+            <Skeleton width="35%" height="2.25rem" radius="10px" />
+            <Skeleton width="90px" height="1.5rem" radius="999px" />
+            <Skeleton width="60%" height="0.9rem" style={{ marginTop: "0.6rem" }} />
+            <Skeleton width="80%" height="0.85rem" />
+            <Skeleton width="70%" height="0.85rem" />
+          </div>
+        )}
         {data && level && (
           <>
             <p className="stat-number" style={{ color: `var(--color-${level.variant})` }}>

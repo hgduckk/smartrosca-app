@@ -30,3 +30,10 @@ next-env.d.ts
 
 # prisma
 prisma/dev.db
+
+# PWA — service worker sinh tự động khi build (không commit)
+/public/sw.js
+/public/sw.js.map
+/public/workbox-*.js
+/public/workbox-*.js.map
+/public/fallback-*.js

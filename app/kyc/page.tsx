@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useWallet } from "@/lib/wallet-context";
 import { useKycStatus } from "@/lib/use-kyc-status";
+import { useToast } from "@/components/ToastProvider";
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -11,6 +12,7 @@ function sleep(ms: number) {
 export default function KycPage() {
   const { address, connect } = useWallet();
   const { status, loading, refetch } = useKycStatus(address);
+  const toast = useToast();
   const [file, setFile] = useState<File | null>(null);
   const [verifying, setVerifying] = useState(false);
 
@@ -26,6 +28,7 @@ export default function KycPage() {
     });
     setVerifying(false);
     await refetch();
+    toast("Xác thực eKYC thành công ✓", "success");
   };
 
   if (!address) {

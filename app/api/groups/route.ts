@@ -13,6 +13,8 @@ export async function POST(req: NextRequest) {
     collateralWei,
     roundDurationSec,
     bidDurationSec,
+    createTxHash,
+    walletAddress,
   } = body ?? {};
 
   if (
@@ -27,10 +29,24 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Thiếu hoặc sai kiểu dữ liệu" }, { status: 400 });
   }
 
+  // Người tạo dây = organizer on-chain. Lưu creatorUserId để quy đúng createTxHash
+  // cho họ trong lịch sử giao dịch (không gán nhầm cho các thành viên khác).
+  let creatorUserId: string | null = null;
+  if (typeof walletAddress === "string" && walletAddress) {
+    const creator = await prisma.user.upsert({
+      where: { walletAddress: walletAddress.toLowerCase() },
+      update: {},
+      create: { walletAddress: walletAddress.toLowerCase() },
+    });
+    creatorUserId = creator.id;
+  }
+
   const group = await prisma.huiGroup.create({
     data: {
       name,
       contractAddress: typeof contractAddress === "string" ? contractAddress : null,
+      createTxHash: typeof createTxHash === "string" ? createTxHash : null,
+      creatorUserId,
       shareAmountWei,
       totalMembers,
       collateralWei,

@@ -38,6 +38,7 @@ model User {
   huiMembers        HuiMember[]
   bids              Bid[]
   contributions     Contribution[]
+  roundDefaults     RoundDefault[]
   wonRounds         Round[]             @relation("RoundWinner")
 }
 
@@ -75,6 +76,12 @@ model HuiGroup {
   id               String         @id @default(cuid())
   name             String
   contractAddress  String?
+  // txHash của giao dịch deploy contract (mỗi dây = 1 lần deploy) — bằng chứng
+  // on-chain của bước tạo dây, hiển thị trong lịch sử giao dịch của người tạo.
+  createTxHash     String?
+  // userId của người tạo dây (đồng thời là organizer on-chain) — dùng để quy
+  // createTxHash đúng cho người tạo trong dashboard, tránh gán nhầm cho mọi thành viên.
+  creatorUserId    String?
   // Số tiền on-chain lưu dạng string (wei) để tránh tràn số (BigInt).
   shareAmountWei   String
   totalMembers     Int
@@ -96,11 +103,28 @@ model HuiMember {
   wonRound   Int?
   isActive   Boolean @default(true)
   joinTxHash String?
+  createdAt  DateTime @default(now())
 
   group HuiGroup @relation(fields: [groupId], references: [id])
   user  User     @relation(fields: [userId], references: [id])
 
   @@unique([groupId, userId])
+}
+
+// Ghi nhận thành viên bị đánh dấu vi phạm (bỏ đóng góp) trong 1 kỳ. Unique
+// [roundId, userId] đảm bảo idempotency: dù event MemberDefaulted có được nhận
+// nhiều lần / nhiều client, mỗi thành viên chỉ bị trừ điểm đúng 1 lần cho 1 kỳ.
+model RoundDefault {
+  id        String   @id @default(cuid())
+  roundId   String
+  userId    String
+  txHash    String?
+  createdAt DateTime @default(now())
+
+  round Round @relation(fields: [roundId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
+
+  @@unique([roundId, userId])
 }
 
 model Round {
@@ -122,6 +146,7 @@ model Round {
   winner   User?    @relation("RoundWinner", fields: [winnerUserId], references: [id])
   bids     Bid[]
   contributions Contribution[]
+  defaults RoundDefault[]
 
   @@unique([groupId, roundNumber])
 }

@@ -74,12 +74,21 @@ export async function GET(req: NextRequest) {
   const history: HistoryItem[] = [];
 
   for (const m of user.huiMembers) {
+    // Người tạo dây (organizer) thấy giao dịch deploy contract của chính họ.
+    if (m.group.createTxHash && m.group.creatorUserId === user.id) {
+      history.push({
+        type: "Tạo dây hụi",
+        groupName: m.group.name,
+        txHash: m.group.createTxHash,
+        createdAt: m.group.createdAt.toISOString(),
+      });
+    }
     if (m.joinTxHash) {
       history.push({
         type: "Tham gia dây hụi",
         groupName: m.group.name,
         txHash: m.joinTxHash,
-        createdAt: m.group.createdAt.toISOString(),
+        createdAt: m.createdAt.toISOString(),
       });
     }
     for (const r of m.group.rounds) {

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { formatEther } from "ethers";
 import { useWallet } from "@/lib/wallet-context";
 import { creditScoreLevel } from "@/lib/credit-score-level";
+import { Skeleton, SkeletonList } from "@/components/Skeleton";
 
 type RoundStatus = {
   roundId: string;
@@ -94,7 +95,13 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <main className="page">
-        <p className="muted">Đang tải dashboard...</p>
+        <h1>Dashboard</h1>
+        <div className="card" style={{ marginBottom: "1rem" }}>
+          <Skeleton width="40%" height="0.9rem" />
+          <Skeleton width="30%" height="2.25rem" radius="10px" style={{ margin: "0.7rem 0" }} />
+          <Skeleton width="90px" height="1.5rem" radius="999px" />
+        </div>
+        <SkeletonList count={3} />
       </main>
     );
   }

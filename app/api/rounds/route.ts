@@ -18,6 +18,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Thiếu groupId" }, { status: 400 });
   }
 
+  const group = await prisma.huiGroup.findUnique({ where: { id: groupId } });
+  if (!group) {
+    return NextResponse.json({ error: "Không tìm thấy dây hụi" }, { status: 404 });
+  }
+
   const lastRound = await prisma.round.findFirst({
     where: { groupId },
     orderBy: { roundNumber: "desc" },
@@ -25,6 +30,18 @@ export async function POST(req: NextRequest) {
   });
   if (lastRound && !lastRound.settled) {
     return NextResponse.json({ round: lastRound });
+  }
+
+  // ROSCA có đúng totalMembers kỳ (mỗi thành viên hốt 1 lần). Khi kỳ cuối đã settled,
+  // KHÔNG tạo kỳ ảo mới — đánh dấu dây COMPLETED và trả lại chính kỳ cuối.
+  if (lastRound && lastRound.roundNumber >= group.totalMembers) {
+    if (group.status !== "COMPLETED") {
+      await prisma.huiGroup.update({
+        where: { id: groupId },
+        data: { status: "COMPLETED" },
+      });
+    }
+    return NextResponse.json({ round: lastRound, completed: true });
   }
 
   try {

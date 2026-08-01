@@ -3,6 +3,8 @@
 import { use, useCallback, useEffect, useMemo, useState } from "react";
 import { formatEther, parseEther } from "ethers";
 import { RequireVerifiedKyc } from "@/components/RequireVerifiedKyc";
+import { useToast } from "@/components/ToastProvider";
+import { SkeletonCard } from "@/components/Skeleton";
 import { useWallet } from "@/lib/wallet-context";
 import {
   closeRoundOnChain,
@@ -63,6 +65,11 @@ type ContributionData = {
   user: { walletAddress: string };
 };
 
+type DefaultData = {
+  id: string;
+  userId: string;
+};
+
 function truncate(address: string) {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
@@ -77,6 +84,7 @@ function formatCountdown(ms: number) {
 
 function BidRoom({ groupId }: { groupId: string }) {
   const { address } = useWallet();
+  const toast = useToast();
   const [group, setGroup] = useState<Group | null>(null);
   const [round, setRound] = useState<RoundData | null>(null);
   const [bids, setBids] = useState<BidData[]>([]);
@@ -91,7 +99,7 @@ function BidRoom({ groupId }: { groupId: string }) {
   const [payingOut, setPayingOut] = useState(false);
   const [organizerAddress, setOrganizerAddress] = useState<string | null>(null);
   const [markingDefaultUserId, setMarkingDefaultUserId] = useState<string | null>(null);
-  const [defaultedUserIds, setDefaultedUserIds] = useState<Set<string>>(new Set());
+  const [defaults, setDefaults] = useState<DefaultData[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const loadBids = useCallback(async (roundId: string) => {
@@ -104,6 +112,12 @@ function BidRoom({ groupId }: { groupId: string }) {
     const res = await fetch(`/api/contributions?roundId=${roundId}`);
     const data = await res.json();
     setContributions(data.contributions ?? []);
+  }, []);
+
+  const loadDefaults = useCallback(async (roundId: string) => {
+    const res = await fetch(`/api/rounds/${roundId}/default`);
+    const data = await res.json();
+    setDefaults(data.defaults ?? []);
   }, []);
 
   const loadGroupAndRound = useCallback(async () => {
@@ -129,8 +143,9 @@ function BidRoom({ groupId }: { groupId: string }) {
     await loadBids(roundData.round.id);
     if (roundData.round.bidClosed) {
       await loadContributions(roundData.round.id);
+      await loadDefaults(roundData.round.id);
     }
-  }, [groupId, loadBids, loadContributions]);
+  }, [groupId, loadBids, loadContributions, loadDefaults]);
 
   useEffect(() => {
     loadGroupAndRound();
@@ -160,18 +175,18 @@ function BidRoom({ groupId }: { groupId: string }) {
     return unsubscribe;
   }, [group?.contractAddress, round, loadBids]);
 
-  // Lắng nghe event MemberDefaulted từ contract để trừ điểm credit score.
+  // Lắng nghe event MemberDefaulted từ contract để ĐỒNG BỘ HIỂN THỊ cho mọi người
+  // đang xem (refetch danh sách vi phạm). Việc trừ điểm KHÔNG làm ở đây — nếu mỗi
+  // client nghe event đều gọi API trừ điểm thì điểm sẽ bị trừ nhân theo số người
+  // xem. Điểm được trừ đúng một lần khi organizer gọi POST /api/rounds/[id]/default
+  // (idempotent nhờ unique roundId+userId).
   useEffect(() => {
-    if (!group?.contractAddress) return;
-    const unsubscribe = listenForMemberDefaulted(group.contractAddress, (memberAddress) => {
-      fetch("/api/members/default", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ walletAddress: memberAddress }),
-      });
+    if (!group?.contractAddress || !round) return;
+    const unsubscribe = listenForMemberDefaulted(group.contractAddress, () => {
+      loadDefaults(round.id);
     });
     return unsubscribe;
-  }, [group?.contractAddress]);
+  }, [group?.contractAddress, round, loadDefaults]);
 
   // Đọc trần lãi ĐỘNG của kỳ hiện tại thật từ contract (currentMaxBidCap()) — ưu
   // tiên tuyệt đối vì trần phụ thuộc kỳ đang diễn ra trên chain, không thể suy ra
@@ -258,8 +273,11 @@ function BidRoom({ groupId }: { groupId: string }) {
       }
       setBidAmountEth("");
       await loadBids(round.id);
+      toast("Đặt bid thành công", "success");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Có lỗi xảy ra.");
+      const msg = err instanceof Error ? err.message : "Có lỗi xảy ra.";
+      setError(msg);
+      toast(msg, "error");
     } finally {
       setPlacingBid(false);
     }
@@ -293,8 +311,12 @@ function BidRoom({ groupId }: { groupId: string }) {
       const data = await res.json();
       setRound(data.round);
       setContributions([]);
+      setDefaults([]);
+      toast("Đã chốt vòng đấu", "success");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Có lỗi xảy ra.");
+      const msg = err instanceof Error ? err.message : "Có lỗi xảy ra.";
+      setError(msg);
+      toast(msg, "error");
     } finally {
       setClosingRound(false);
     }
@@ -319,13 +341,22 @@ function BidRoom({ groupId }: { groupId: string }) {
     [contributions]
   );
 
+  const isDefaulted = useCallback(
+    (userId: string) => defaults.some((d) => d.userId === userId),
+    [defaults]
+  );
+
   const myMember = useMemo(
     () => requiredMembers.find((m) => m.user.walletAddress.toLowerCase() === address?.toLowerCase()),
     [requiredMembers, address]
   );
 
+  // Đủ điều kiện giải ngân khi mọi thành viên phải đóng ĐÃ đóng HOẶC đã bị đánh dấu
+  // vi phạm (contract tự siết ký quỹ người vi phạm khi payout) — nếu không loại
+  // người vi phạm ra, nút Giải ngân sẽ bị khóa vĩnh viễn vì họ không bao giờ đóng.
   const allContributed =
-    requiredMembers.length > 0 && requiredMembers.every((m) => hasContributed(m.userId));
+    requiredMembers.length > 0 &&
+    requiredMembers.every((m) => hasContributed(m.userId) || isDefaulted(m.userId));
 
   // Hạn đóng góp của kỳ = round.startTime + roundDuration (cả kỳ, không phải riêng
   // bidDuration). Dùng để quyết định nút "Đánh dấu vi phạm" có bấm được chưa.
@@ -340,15 +371,30 @@ function BidRoom({ groupId }: { groupId: string }) {
   // theo thời gian (blockchain không có cron/scheduler). Credit score của thành
   // viên sẽ tự giảm qua listener event MemberDefaulted đã đăng ký ở trên.
   const handleMarkDefault = async (member: Member) => {
-    if (!group?.contractAddress) return;
+    if (!group?.contractAddress || !round) return;
     setMarkingDefaultUserId(member.userId);
     setError(null);
     try {
+      // 1. Đánh dấu vi phạm trên smart contract trước.
       const signer = await getBrowserSigner();
-      await markDefaultOnChain(signer, group.contractAddress, member.user.walletAddress);
-      setDefaultedUserIds((prev) => new Set(prev).add(member.userId));
+      const { txHash } = await markDefaultOnChain(
+        signer,
+        group.contractAddress,
+        member.user.walletAddress
+      );
+
+      // 2. Ghi nhận off-chain + trừ điểm ĐÚNG MỘT LẦN (idempotent qua unique roundId+userId).
+      await fetch(`/api/rounds/${round.id}/default`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ walletAddress: member.user.walletAddress, txHash }),
+      });
+      await loadDefaults(round.id);
+      toast("Đã đánh dấu vi phạm", "success");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Có lỗi xảy ra.");
+      const msg = err instanceof Error ? err.message : "Có lỗi xảy ra.";
+      setError(msg);
+      toast(msg, "error");
     } finally {
       setMarkingDefaultUserId(null);
     }
@@ -383,8 +429,11 @@ function BidRoom({ groupId }: { groupId: string }) {
         throw new Error(data.error ?? "Đóng góp thất bại");
       }
       await loadContributions(round.id);
+      toast("Đóng góp thành công", "success");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Có lỗi xảy ra.");
+      const msg = err instanceof Error ? err.message : "Có lỗi xảy ra.";
+      setError(msg);
+      toast(msg, "error");
     } finally {
       setContributing(false);
     }
@@ -411,8 +460,11 @@ function BidRoom({ groupId }: { groupId: string }) {
       }
       const data = await res.json();
       setRound(data.round);
+      toast("Giải ngân thành công 🎉", "success");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Có lỗi xảy ra.");
+      const msg = err instanceof Error ? err.message : "Có lỗi xảy ra.";
+      setError(msg);
+      toast(msg, "error");
     } finally {
       setPayingOut(false);
     }
@@ -421,7 +473,10 @@ function BidRoom({ groupId }: { groupId: string }) {
   if (!group || !round) {
     return (
       <main className="page">
-        <p className="muted">Đang tải phòng đấu giá...</p>
+        <SkeletonCard />
+        <div style={{ marginTop: "1rem" }}>
+          <SkeletonCard />
+        </div>
       </main>
     );
   }
@@ -466,8 +521,8 @@ function BidRoom({ groupId }: { groupId: string }) {
             {requiredMembers.map((m) => {
               const requiredWei = requiredWeiFor(m);
               const paid = hasContributed(m.userId);
-              const isDefaulted = defaultedUserIds.has(m.userId);
-              const canMarkDefault = isOrganizer && !paid && !isDefaulted;
+              const memberDefaulted = isDefaulted(m.userId);
+              const canMarkDefault = isOrganizer && !paid && !memberDefaulted;
               return (
                 <li key={m.userId} className="row" style={{ justifyContent: "space-between" }}>
                   <span>
@@ -480,10 +535,10 @@ function BidRoom({ groupId }: { groupId: string }) {
                   <span className="row" style={{ gap: "0.4rem" }}>
                     <span
                       className={`badge ${
-                        isDefaulted ? "badge-danger" : paid ? "badge-success" : "badge-neutral"
+                        memberDefaulted ? "badge-danger" : paid ? "badge-success" : "badge-neutral"
                       }`}
                     >
-                      {isDefaulted ? "Vi phạm" : paid ? "Đã đóng ✓" : "Chưa đóng"}
+                      {memberDefaulted ? "Vi phạm" : paid ? "Đã đóng ✓" : "Chưa đóng"}
                     </span>
                     {canMarkDefault && (
                       <button

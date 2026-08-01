@@ -685,3 +685,313 @@ h3 {
 .profile-row + .profile-row {
   border-top: 1px solid var(--color-border);
 }
+
+/* ================================================================
+   PWA / Mobile — safe-area, touch, chống zoom, standalone
+   ================================================================ */
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Header né status bar / Dynamic Island khi chạy standalone (statusBarStyle =
+   black-translucent + viewport-fit=cover). env(...) = 0 trên trình duyệt thường. */
+.app-header {
+  padding-top: calc(0.8rem + env(safe-area-inset-top, 0px));
+  padding-left: calc(1.1rem + env(safe-area-inset-left, 0px));
+  padding-right: calc(1.1rem + env(safe-area-inset-right, 0px));
+}
+
+/* Chống double-scroll / bounce: chỉ .phone-screen cuộn. */
+.phone-screen {
+  overscroll-behavior-y: contain;
+}
+
+/* Chống iOS auto-zoom khi focus: input phải >=16px. */
+.input,
+input,
+select,
+textarea {
+  font-size: 16px;
+}
+
+/* Touch target tối thiểu 44px cho nút chính; 40px cho nút nhỏ (vẫn dễ chạm). */
+.btn {
+  min-height: 44px;
+}
+.btn-sm {
+  min-height: 40px;
+}
+
+/* Khi cài về màn hình chính: khung điện thoại giả nới full, chừa safe-area. */
+@media all and (display-mode: standalone) {
+  .phone-outer {
+    padding: 0;
+    background: var(--color-bg);
+  }
+  .phone-frame {
+    max-width: 100%;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .phone-notch {
+    display: none;
+  }
+}
+
+/* ---------- State screen (offline / 404 / error) ---------- */
+
+.state-screen {
+  min-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 0.25rem;
+  padding: 1rem;
+}
+
+.state-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.75rem;
+}
+.state-icon-warning {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+.state-icon-danger {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+.state-icon-neutral {
+  background: var(--color-neutral-bg);
+  color: var(--color-text-muted);
+}
+
+/* ---------- Theme toggle ---------- */
+
+.theme-toggle {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  min-height: 38px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+.theme-toggle:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+/* ---------- Skeleton shimmer ---------- */
+
+.skeleton {
+  display: block;
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-muted) 25%,
+    var(--color-border) 37%,
+    var(--color-surface-muted) 63%
+  );
+  background-size: 400% 100%;
+  animation: skeleton-shimmer 1.4s ease infinite;
+}
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+/* ---------- Toast ---------- */
+
+.toast-viewport {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  width: min(92%, 380px);
+  pointer-events: none;
+}
+.toast {
+  pointer-events: auto;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  text-align: left;
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 0.7rem 0.85rem;
+  box-shadow: var(--shadow-md);
+  font: inherit;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+.toast-icon {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #fff;
+}
+.toast-icon-success {
+  background: var(--color-success);
+}
+.toast-icon-error {
+  background: var(--color-danger);
+}
+.toast-icon-info {
+  background: var(--color-primary);
+}
+.toast-message {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ---------- Install prompt card ---------- */
+
+.install-card {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+  z-index: 55;
+  width: min(92%, 400px);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.1rem;
+  box-shadow: var(--shadow-md);
+}
+.install-card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+.install-card-logo {
+  flex: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-primary);
+  color: #fff;
+  font-weight: 800;
+  font-size: 1.1rem;
+}
+.install-card-title {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 0.9rem;
+}
+.install-card-title .muted {
+  font-size: 0.8rem;
+  font-weight: 400;
+}
+.install-card-close {
+  flex: none;
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 0.2rem;
+  line-height: 1;
+}
+.install-steps {
+  margin: 0.9rem 0 0;
+  padding-left: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.86rem;
+  color: var(--color-text);
+}
+.install-ios-icon {
+  display: inline-flex;
+  vertical-align: middle;
+  color: var(--color-primary);
+}
+.install-actions {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.9rem;
+}
+.install-actions .btn {
+  flex: 1;
+}
+
+/* ---------- Pull-to-refresh ---------- */
+
+.ptr-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: opacity 0.15s;
+}
+.ptr-spinner {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2.5px solid var(--color-border);
+  border-top-color: var(--color-primary);
+}
+.ptr-spinner-active {
+  animation: ptr-spin 0.7s linear infinite;
+}
+@keyframes ptr-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- Tôn trọng prefers-reduced-motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
