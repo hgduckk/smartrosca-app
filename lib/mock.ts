@@ -42,6 +42,20 @@ const ETH = (n: number) => BigInt(Math.round(n * 1e6)).toString() + "00000000000
 
 // --- Dữ liệu mẫu ---------------------------------------------------------
 
+// Kết quả OCR giả lập cho CCCD — dùng ở bước "Kiểm tra thông tin" của eKYC.
+// Giai đoạn thật sẽ thay bằng kết quả nhận diện từ dịch vụ OCR/eKYC.
+export function mockCccdOcr() {
+  return {
+    name: "NGUYỄN VĂN A",
+    cccd: "079203001234",
+    dob: "01/01/1990",
+    gender: "Nam",
+    nationality: "Việt Nam",
+    hometown: "Phường 1, TP. Đà Lạt, Lâm Đồng",
+    residence: "123 Lê Lợi, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh",
+  };
+}
+
 export function mockKyc() {
   return {
     kyc: {

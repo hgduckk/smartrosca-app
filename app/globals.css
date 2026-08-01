@@ -1544,6 +1544,165 @@ textarea {
 .ob-shutter:active {
   transform: scale(0.93);
 }
+.ob-shutter:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.ob-camera-icon-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.ob-cam-sample {
+  color: var(--color-primary);
+}
+
+/* Vùng hiển thị camera / ảnh chụp bên trong khung CCCD */
+.ob-frame-media {
+  position: absolute;
+  inset: 8%;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #0b0a12;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ob-cam-video,
+.ob-cap-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.ob-cam-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1rem 1.25rem;
+  text-align: center;
+  color: #efeaff;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+.ob-cam-error svg {
+  color: var(--color-secondary);
+}
+
+/* Lớp phủ "đang nhận diện" khi giả lập OCR */
+.ob-frame-scan {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: rgba(11, 10, 18, 0.5);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+.ob-scan-line {
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
+  box-shadow: 0 0 12px 2px rgba(108, 75, 244, 0.6);
+  animation: ob-scan 1.3s ease-in-out infinite;
+}
+@keyframes ob-scan {
+  0% { top: 10%; }
+  50% { top: 86%; }
+  100% { top: 10%; }
+}
+
+/* Chớp sáng khi bấm chụp */
+.ob-flash-pop {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  border-radius: 16px;
+  pointer-events: none;
+  animation: ob-flash 0.35s ease-out forwards;
+}
+@keyframes ob-flash {
+  from { opacity: 0.9; }
+  to { opacity: 0; }
+}
+
+/* Hàng nút sau khi chụp: Chụp lại / Dùng ảnh này */
+.ob-cap-actions {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 340px;
+  margin-top: 1.5rem;
+}
+.ob-btn--outline {
+  background: transparent;
+  color: var(--color-primary);
+  border: 1.5px solid var(--color-primary);
+  box-shadow: none;
+}
+.ob-cam-hint {
+  position: relative;
+  z-index: 2;
+  max-width: 340px;
+  margin: 1rem 0 0;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+/* Ảnh thu nhỏ CCCD + trạng thái trích xuất trên màn Kiểm tra thông tin */
+.ob-cap-thumbs {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+.ob-cap-thumb {
+  flex: 1;
+  margin: 0;
+}
+.ob-cap-thumb img {
+  width: 100%;
+  aspect-ratio: 1.585 / 1;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+}
+.ob-cap-thumb figcaption {
+  margin-top: 0.35rem;
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+.ob-extract {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin: 3rem 0;
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.ob-extract-spinner {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 3px solid var(--color-primary-soft);
+  border-top-color: var(--color-primary);
+  animation: ob-spin 0.8s linear infinite;
+}
+@keyframes ob-spin {
+  to { transform: rotate(360deg); }
+}
 
 /* ---------- Xác thực khuôn mặt (vòng ring + wireframe) ---------- */
 

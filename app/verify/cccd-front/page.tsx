@@ -6,6 +6,7 @@ export default function CccdFrontPage() {
       title="Chụp mặt trước CCCD"
       subtitle="Đặt CCCD vào khung hình và chụp"
       nextHref="/verify/cccd-back"
+      storageKey="rosca-kyc-cccd-front"
     />
   );
 }
