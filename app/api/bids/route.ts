@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { MOCK_MODE, mockBids, mockTxHash } from "@/lib/mock";
 
 // Lưu 1 bid vào DB — gọi SAU KHI đã placeBid() thành công trên smart contract.
 export async function POST(req: NextRequest) {
   const body = await req.json();
   const { roundId, walletAddress, amountWei, txHash } = body ?? {};
+
+  if (MOCK_MODE) {
+    return NextResponse.json({
+      bid: { id: `bid-${Date.now()}`, roundId, amountWei, txHash: txHash ?? mockTxHash() },
+    });
+  }
 
   if (
     typeof roundId !== "string" ||
@@ -42,6 +49,8 @@ export async function GET(req: NextRequest) {
   if (!roundId) {
     return NextResponse.json({ error: "Thiếu roundId" }, { status: 400 });
   }
+
+  if (MOCK_MODE) return NextResponse.json(mockBids());
 
   const bids = await prisma.bid.findMany({
     where: { roundId },

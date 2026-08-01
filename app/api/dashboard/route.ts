@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { MOCK_MODE, mockDashboard } from "@/lib/mock";
 
 // Tổng hợp dữ liệu cho dashboard: các dây hụi đang tham gia (trạng thái từng kỳ),
 // credit score hiện tại + lịch sử thay đổi, và lịch sử giao dịch (tx hash) đã ghi
 // nhận qua app này — đây chính là bằng chứng minh bạch on-chain (BidPlaced,
 // RoundClosed, Payout tương ứng với Bid/Round.closeRoundTxHash/Round.payoutTxHash).
 export async function GET(req: NextRequest) {
+  if (MOCK_MODE) return NextResponse.json(mockDashboard());
+
   const walletAddress = req.nextUrl.searchParams.get("walletAddress");
   if (!walletAddress) {
     return NextResponse.json({ error: "Thiếu walletAddress" }, { status: 400 });

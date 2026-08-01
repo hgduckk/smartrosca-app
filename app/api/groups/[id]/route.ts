@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { MOCK_MODE, mockGroupDetail } from "@/lib/mock";
 
 // Chi tiết 1 dây hụi kèm danh sách thành viên — dùng cho trang đấu giá.
 export async function GET(
@@ -7,6 +8,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+
+  if (MOCK_MODE) return NextResponse.json(mockGroupDetail(id));
 
   const group = await prisma.huiGroup.findUnique({
     where: { id },

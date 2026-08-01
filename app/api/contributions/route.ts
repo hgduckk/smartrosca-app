@@ -5,12 +5,19 @@ import {
   CONTRIBUTION_LATE_DELTA,
   CONTRIBUTION_ON_TIME_DELTA,
 } from "@/lib/credit-score";
+import { MOCK_MODE, MOCK_ADDRESS, mockTxHash } from "@/lib/mock";
 
 // Lưu 1 khoản đóng góp — gọi SAU KHI đã contribute() thành công trên smart contract.
 // Đồng thời cập nhật credit score: cộng điểm nếu đóng đúng hạn, trừ điểm nếu trễ hạn.
 export async function POST(req: NextRequest) {
   const body = await req.json();
   const { roundId, walletAddress, amountWei, txHash, onTime } = body ?? {};
+
+  if (MOCK_MODE) {
+    return NextResponse.json({
+      contribution: { id: `ct-${Date.now()}`, roundId, amountWei, onTime: onTime ?? true, txHash: txHash ?? mockTxHash() },
+    });
+  }
 
   if (
     typeof roundId !== "string" ||
@@ -56,6 +63,14 @@ export async function GET(req: NextRequest) {
   const roundId = req.nextUrl.searchParams.get("roundId");
   if (!roundId) {
     return NextResponse.json({ error: "Thiếu roundId" }, { status: 400 });
+  }
+
+  if (MOCK_MODE) {
+    return NextResponse.json({
+      contributions: [
+        { id: "ct-seed", amountWei: "450000000000000000", onTime: true, user: { walletAddress: MOCK_ADDRESS.toLowerCase() } },
+      ],
+    });
   }
 
   const contributions = await prisma.contribution.findMany({

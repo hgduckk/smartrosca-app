@@ -1,9 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { MOCK_MODE, mockGroupsList } from "@/lib/mock";
 
 // Tạo HuiGroup mới trong DB — gọi SAU KHI đã tạo group thành công trên smart contract,
 // backend chỉ ghi nhận kết quả (contractAddress) chứ không tự tạo giao dịch.
 export async function POST(req: NextRequest) {
+  if (MOCK_MODE) {
+    const body = await req.json().catch(() => ({}));
+    return NextResponse.json({
+      group: { id: `grp-${Date.now()}`, ...body, status: "OPEN", createdAt: new Date().toISOString() },
+    });
+  }
+
   const body = await req.json();
   const {
     name,
@@ -61,6 +69,8 @@ export async function POST(req: NextRequest) {
 
 // Danh sách dây hụi đang mở (status = OPEN).
 export async function GET() {
+  if (MOCK_MODE) return NextResponse.json(mockGroupsList());
+
   const groups = await prisma.huiGroup.findMany({
     where: { status: "OPEN" },
     orderBy: { createdAt: "desc" },

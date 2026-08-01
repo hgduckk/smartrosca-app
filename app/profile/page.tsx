@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth-context";
 import { useWallet } from "@/lib/wallet-context";
 import { useKycStatus } from "@/lib/use-kyc-status";
 import { creditScoreLevel } from "@/lib/credit-score-level";
@@ -31,9 +33,16 @@ function kycLabel(status: string | null) {
 }
 
 export default function ProfilePage() {
+  const router = useRouter();
+  const { user, logout } = useAuth();
   const { address, connect, isConnecting } = useWallet();
   const { status: kycStatus, loading: kycLoading } = useKycStatus(address);
   const toast = useToast();
+
+  function handleLogout() {
+    logout();
+    router.replace("/login");
+  }
   const [data, setData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -108,9 +117,9 @@ export default function ProfilePage() {
             </svg>
           </span>
           <div>
-            <p style={{ margin: 0, fontWeight: 700 }}>Ví của tôi</p>
+            <p style={{ margin: 0, fontWeight: 700 }}>{user?.name ?? "Người dùng"}</p>
             <p className="profile-address muted" style={{ margin: "0.15rem 0 0" }}>
-              {truncate(address)}
+              {user?.account ? `Tài khoản: ${user.account}` : truncate(address)}
             </p>
           </div>
         </div>
@@ -175,6 +184,20 @@ export default function ProfilePage() {
             </ul>
           </>
         )}
+      </div>
+
+      <div className="card">
+        <button
+          className="btn btn-outline"
+          onClick={handleLogout}
+          style={{ width: "100%", color: "var(--color-danger)", borderColor: "var(--color-danger)" }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M15 12H4M8 8l-4 4 4 4" />
+            <path d="M9 4h9a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-9" />
+          </svg>
+          Đăng xuất
+        </button>
       </div>
     </main>
   );

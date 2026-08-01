@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { MOCK_MODE, MOCK_ADDRESS, mockGroupDetail } from "@/lib/mock";
 
 // Ghi nhận thành viên tham gia dây hụi — gọi SAU KHI đã join() + ký quỹ thành công
 // trên smart contract, backend chỉ lưu lại joinTxHash làm bằng chứng.
 export async function POST(req: NextRequest) {
   const body = await req.json();
   const { groupId, walletAddress, joinTxHash } = body ?? {};
+
+  if (MOCK_MODE) {
+    return NextResponse.json({
+      member: { id: `mem-${Date.now()}`, groupId, joinTxHash: joinTxHash ?? null, user: { walletAddress: MOCK_ADDRESS.toLowerCase() } },
+    });
+  }
 
   if (
     typeof groupId !== "string" ||
@@ -64,6 +71,8 @@ export async function GET(req: NextRequest) {
   if (!groupId) {
     return NextResponse.json({ error: "Thiếu groupId" }, { status: 400 });
   }
+
+  if (MOCK_MODE) return NextResponse.json({ members: mockGroupDetail(groupId).group.members });
 
   const members = await prisma.huiMember.findMany({
     where: { groupId },

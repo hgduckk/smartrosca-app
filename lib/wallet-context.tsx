@@ -10,6 +10,7 @@ import {
 } from "react";
 import { BrowserProvider } from "ethers";
 import { CHAIN_ID } from "./contract";
+import { MOCK_MODE, MOCK_ADDRESS } from "./mock";
 
 type WalletState = {
   address: string | null;
@@ -28,7 +29,37 @@ const WalletContext = createContext<WalletContextValue | null>(null);
 
 const SEPOLIA_HEX_CHAIN_ID = `0x${CHAIN_ID.toString(16)}`;
 
+// Chọn provider theo cờ MOCK: bản test dùng ví giả "đã kết nối"; bản thật dùng
+// MetaMask như cũ. Toàn bộ logic thật (RealWalletProvider) được giữ nguyên.
 export function WalletProvider({ children }: { children: ReactNode }) {
+  return MOCK_MODE ? (
+    <MockWalletProvider>{children}</MockWalletProvider>
+  ) : (
+    <RealWalletProvider>{children}</RealWalletProvider>
+  );
+}
+
+// Ví giả cho bản test: luôn "đã kết nối" đúng mạng, không cần MetaMask.
+function MockWalletProvider({ children }: { children: ReactNode }) {
+  const noop = useCallback(async () => {}, []);
+  return (
+    <WalletContext.Provider
+      value={{
+        address: MOCK_ADDRESS.toLowerCase(),
+        chainId: CHAIN_ID,
+        isConnecting: false,
+        error: null,
+        isCorrectNetwork: true,
+        connect: noop,
+        switchToSepolia: noop,
+      }}
+    >
+      {children}
+    </WalletContext.Provider>
+  );
+}
+
+function RealWalletProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<WalletState>({
     address: null,
     chainId: null,

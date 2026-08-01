@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { MOCK_MODE, MOCK_ADDRESS, mockRound, mockTxHash } from "@/lib/mock";
 
 // Ghi nhận kết quả vòng đấu — gọi SAU KHI đã closeRound() thành công trên smart
 // contract. Backend chỉ lưu lại người thắng + số tiền mỗi nhóm phải đóng, không
@@ -17,6 +18,21 @@ export async function POST(
     requiredFromDeadWei,
     closeRoundTxHash,
   } = body ?? {};
+
+  if (MOCK_MODE) {
+    return NextResponse.json(
+      mockRound("grp-xxx", {
+        id,
+        bidClosed: true,
+        winnerUserId: "mock-user",
+        winner: { walletAddress: (winnerWalletAddress ?? MOCK_ADDRESS).toLowerCase() },
+        winningBidWei: winningBidWei ?? "50000000000000000",
+        requiredFromSurvivorWei: requiredFromSurvivorWei ?? "450000000000000000",
+        requiredFromDeadWei: requiredFromDeadWei ?? "500000000000000000",
+        closeRoundTxHash: closeRoundTxHash ?? mockTxHash(),
+      }),
+    );
+  }
 
   if (typeof winnerWalletAddress !== "string" || !winnerWalletAddress) {
     return NextResponse.json({ error: "Thiếu winnerWalletAddress" }, { status: 400 });

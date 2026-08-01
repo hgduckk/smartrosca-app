@@ -2034,3 +2034,65 @@ textarea {
 .home-hui-btn:hover {
   background: var(--color-primary-hover);
 }
+
+/* ================================================================
+   FIGMA POLISH — nâng cấp các trang dùng class chung (.page/.card/.input/
+   .btn...) để đồng bộ phong cách với các màn Figma: tiêu đề navy đậm, thẻ
+   bo tròn lớn, input/nút bo tròn + gradient tím. Đặt cuối file để override.
+   ================================================================ */
+
+/* Tiêu đề trang — navy đậm như Figma */
+.page h1 {
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  color: var(--ob-heading);
+  margin-top: 0.25rem;
+}
+.page h2 {
+  font-weight: 700;
+}
+
+/* Thẻ bo tròn lớn, viền mềm hơn */
+.card {
+  border-radius: var(--radius-lg);
+  padding: 1.35rem 1.4rem;
+}
+
+/* Ô nhập bo tròn, đệm rộng, focus ring tím */
+.input {
+  border-radius: 12px;
+  padding: 0.8rem 0.95rem;
+  background: var(--color-surface-muted);
+  border-color: transparent;
+}
+.input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-soft-strong);
+}
+.field {
+  gap: 0.5rem;
+}
+
+/* Nút bo tròn hơn; nút chính dùng gradient tím + đổ bóng như Figma */
+.btn {
+  border-radius: 12px;
+}
+.btn-primary {
+  background: var(--ob-gradient);
+  border-color: transparent;
+  box-shadow: 0 10px 20px -10px rgba(108, 75, 244, 0.55);
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--ob-gradient);
+  filter: brightness(1.06);
+}
+.btn-sm {
+  border-radius: 10px;
+}
+
+/* Badge & số liệu giữ nguyên, chỉ bo tròn nút outline cho đồng bộ */
+.btn-outline {
+  border-radius: 12px;
+}

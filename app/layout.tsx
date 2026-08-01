@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { WalletProvider } from "@/lib/wallet-context";
+import { AuthProvider } from "@/lib/auth-context";
 import { ToastProvider } from "@/components/ToastProvider";
 import { AppChrome } from "@/components/AppChrome";
 
@@ -99,9 +100,11 @@ export default function RootLayout({
       <body>
         <script dangerouslySetInnerHTML={{ __html: noFlashThemeScript }} />
         <WalletProvider>
-          <ToastProvider>
-            <AppChrome>{children}</AppChrome>
-          </ToastProvider>
+          <AuthProvider>
+            <ToastProvider>
+              <AppChrome>{children}</AppChrome>
+            </ToastProvider>
+          </AuthProvider>
         </WalletProvider>
       </body>
     </html>

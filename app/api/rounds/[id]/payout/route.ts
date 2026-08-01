@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { MOCK_MODE, MOCK_ADDRESS, mockRound, mockTxHash } from "@/lib/mock";
 
 // Đánh dấu vòng đấu đã giải ngân — gọi SAU KHI đã payout() thành công trên smart
 // contract (tiền đã chuyển cho winner). Kỳ kế tiếp sẽ tự được tạo khi thành viên
@@ -11,6 +12,19 @@ export async function POST(
   const { id } = await params;
   const body = await req.json();
   const payoutTxHash = body?.payoutTxHash;
+
+  if (MOCK_MODE) {
+    return NextResponse.json(
+      mockRound("grp-xxx", {
+        id,
+        bidClosed: true,
+        settled: true,
+        winnerUserId: "mock-user",
+        winner: { walletAddress: MOCK_ADDRESS.toLowerCase() },
+        payoutTxHash: payoutTxHash ?? mockTxHash(),
+      }),
+    );
+  }
 
   if (typeof payoutTxHash !== "string" || !payoutTxHash) {
     return NextResponse.json({ error: "Thiếu payoutTxHash" }, { status: 400 });

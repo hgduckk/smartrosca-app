@@ -6,15 +6,19 @@ import { useRouter } from "next/navigation";
 import { BrandLogo } from "@/components/onboarding/BrandLogo";
 import { PasswordField } from "@/components/onboarding/PasswordField";
 import { WaveBg } from "@/components/onboarding/WaveBg";
+import { useAuth } from "@/lib/auth-context";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login } = useAuth();
   const [account, setAccount] = useState("");
   const [password, setPassword] = useState("");
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    // TODO(chức năng thật): gọi API xác thực. Hiện điều hướng về trang chủ.
+    // Bản test: đăng nhập giả lập (chấp nhận mọi thông tin). Giai đoạn thật sẽ
+    // gọi API xác thực. Lưu phiên rồi về trang chủ.
+    login(account.trim() || "0900000000");
     router.push("/");
   }
 
@@ -73,6 +77,9 @@ export default function LoginPage() {
           <button type="submit" className="ob-btn" style={{ marginTop: "0.25rem" }}>
             Đăng nhập
           </button>
+          <p className="ob-footnote" style={{ fontSize: "0.78rem", marginTop: "-0.3rem" }}>
+            Bản test: nhập bất kỳ để đăng nhập
+          </p>
         </form>
 
         <div className="ob-spacer" />

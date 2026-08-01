@@ -5,9 +5,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PasswordField } from "@/components/onboarding/PasswordField";
 import { WaveBg } from "@/components/onboarding/WaveBg";
+import { useAuth } from "@/lib/auth-context";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { register } = useAuth();
   const [form, setForm] = useState({ name: "", cccd: "", phone: "", email: "", password: "" });
   const [agree, setAgree] = useState(false);
 
@@ -16,7 +18,9 @@ export default function RegisterPage() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    // TODO(chức năng thật): tạo tài khoản → gửi OTP. Hiện chuyển sang eKYC.
+    // Bản test: tạo phiên giả lập rồi vào luồng eKYC. Giai đoạn thật sẽ tạo tài
+    // khoản + gửi OTP trước.
+    register({ name: form.name, account: form.phone || form.cccd });
     router.push("/verify");
   }
 

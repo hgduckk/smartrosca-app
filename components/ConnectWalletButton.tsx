@@ -1,6 +1,7 @@
 "use client";
 
 import { useWallet } from "@/lib/wallet-context";
+import { MOCK_MODE } from "@/lib/mock";
 
 function truncate(address: string) {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -9,6 +10,9 @@ function truncate(address: string) {
 export function ConnectWalletButton() {
   const { address, isCorrectNetwork, isConnecting, error, connect, switchToSepolia } =
     useWallet();
+
+  // Bản test (mock): không hiển thị trạng thái ví để tránh hiểu nhầm.
+  if (MOCK_MODE) return null;
 
   if (!address) {
     return (

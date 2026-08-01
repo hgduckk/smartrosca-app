@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { applyCreditScoreDelta, MEMBER_DEFAULT_DELTA } from "@/lib/credit-score";
+import { MOCK_MODE, mockTxHash } from "@/lib/mock";
 
 // Ghi nhận 1 thành viên bị đánh dấu vi phạm trong 1 kỳ ([id] = roundId) và trừ
 // điểm credit score ĐÚNG MỘT LẦN. Gọi từ organizer sau khi markDefault() on-chain
@@ -15,6 +16,13 @@ export async function POST(
   const body = await req.json();
   const walletAddress = body?.walletAddress;
   const txHash = typeof body?.txHash === "string" ? body.txHash : null;
+
+  if (MOCK_MODE) {
+    return NextResponse.json({
+      default: { id: `def-${Date.now()}`, roundId, txHash: txHash ?? mockTxHash() },
+      penalized: true,
+    });
+  }
 
   if (typeof walletAddress !== "string" || !walletAddress) {
     return NextResponse.json({ error: "Thiếu walletAddress" }, { status: 400 });
@@ -58,6 +66,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id: roundId } = await params;
+
+  if (MOCK_MODE) return NextResponse.json({ defaults: [] });
+
   const defaults = await prisma.roundDefault.findMany({
     where: { roundId },
   });

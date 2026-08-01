@@ -6,6 +6,13 @@ import {
   type InterfaceAbi,
   type Signer,
 } from "ethers";
+import {
+  MOCK_MODE,
+  MOCK_ADDRESS,
+  mockTxHash,
+  mockContractAddress,
+  mockDelay,
+} from "./mock";
 
 export const CHAIN_ID = Number(process.env.NEXT_PUBLIC_CHAIN_ID ?? "11155111");
 
@@ -255,6 +262,8 @@ export function getGroupContract(runner: ContractRunner, groupContractAddress: s
 // Lấy signer từ ví MetaMask đang kết nối — dùng ngay trước khi gửi giao dịch,
 // không cache lại vì signer có thể đổi theo tài khoản/mạng hiện tại của ví.
 export async function getBrowserSigner(): Promise<Signer> {
+  // MOCK: trả signer giả (không dùng thật vì các hàm hành động đã short-circuit).
+  if (MOCK_MODE) return {} as unknown as Signer;
   if (!window.ethereum) {
     throw new Error("Chưa cài đặt MetaMask.");
   }
@@ -283,6 +292,10 @@ export async function createGroupOnChain(
   signer: Signer,
   params: CreateGroupParams
 ): Promise<CreateGroupResult> {
+  if (MOCK_MODE) {
+    await mockDelay();
+    return { contractAddress: mockContractAddress(), txHash: mockTxHash() };
+  }
   if (!IS_CONTRACT_CONFIGURED) {
     throw new Error("Chưa cấu hình ABI contract thật.");
   }
@@ -314,6 +327,10 @@ export async function joinGroupOnChain(
   groupContractAddress: string,
   collateralWei: bigint
 ): Promise<{ txHash: string }> {
+  if (MOCK_MODE) {
+    await mockDelay();
+    return { txHash: mockTxHash() };
+  }
   if (!IS_CONTRACT_CONFIGURED) {
     throw new Error("Chưa cấu hình ABI contract thật.");
   }
@@ -333,6 +350,10 @@ export async function placeBidOnChain(
   groupContractAddress: string,
   amountWei: bigint
 ): Promise<PlaceBidResult> {
+  if (MOCK_MODE) {
+    await mockDelay();
+    return { txHash: mockTxHash() };
+  }
   if (!IS_CONTRACT_CONFIGURED) {
     throw new Error("Chưa cấu hình ABI contract thật.");
   }
@@ -388,6 +409,16 @@ export async function closeRoundOnChain(
   signer: Signer,
   groupContractAddress: string
 ): Promise<CloseRoundResult> {
+  if (MOCK_MODE) {
+    await mockDelay();
+    return {
+      txHash: mockTxHash(),
+      winnerAddress: MOCK_ADDRESS.toLowerCase(),
+      winningBidWei: BigInt("50000000000000000"), // 0.05 ETH
+      requiredFromSurvivorWei: BigInt("450000000000000000"),
+      requiredFromDeadWei: BigInt("500000000000000000"),
+    };
+  }
   if (!IS_CONTRACT_CONFIGURED) {
     throw new Error("Chưa cấu hình ABI contract thật.");
   }
@@ -415,6 +446,10 @@ export async function contributeOnChain(
   groupContractAddress: string,
   amountWei: bigint
 ): Promise<ContributeResult> {
+  if (MOCK_MODE) {
+    await mockDelay();
+    return { txHash: mockTxHash() };
+  }
   if (!IS_CONTRACT_CONFIGURED) {
     throw new Error("Chưa cấu hình ABI contract thật.");
   }
@@ -434,6 +469,10 @@ export async function payoutOnChain(
   signer: Signer,
   groupContractAddress: string
 ): Promise<PayoutResult> {
+  if (MOCK_MODE) {
+    await mockDelay();
+    return { txHash: mockTxHash() };
+  }
   if (!IS_CONTRACT_CONFIGURED) {
     throw new Error("Chưa cấu hình ABI contract thật.");
   }
@@ -485,6 +524,10 @@ export async function markDefaultOnChain(
   groupContractAddress: string,
   memberAddress: string
 ): Promise<MarkDefaultResult> {
+  if (MOCK_MODE) {
+    await mockDelay();
+    return { txHash: mockTxHash() };
+  }
   if (!IS_CONTRACT_CONFIGURED) {
     throw new Error("Chưa cấu hình ABI contract thật.");
   }

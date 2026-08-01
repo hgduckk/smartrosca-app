@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { MOCK_MODE, mockRound } from "@/lib/mock";
 
 // Lấy vòng đấu hiện tại của 1 group; tự tạo vòng mới nếu vòng gần nhất đã settled.
 // Vòng đấu thật sự được điều khiển bởi smart contract — đây chỉ là bản ghi tổng
@@ -17,6 +18,8 @@ export async function POST(req: NextRequest) {
   if (typeof groupId !== "string" || !groupId) {
     return NextResponse.json({ error: "Thiếu groupId" }, { status: 400 });
   }
+
+  if (MOCK_MODE) return NextResponse.json(mockRound(groupId));
 
   const group = await prisma.huiGroup.findUnique({ where: { id: groupId } });
   if (!group) {
@@ -74,6 +77,8 @@ export async function GET(req: NextRequest) {
   if (!groupId) {
     return NextResponse.json({ error: "Thiếu groupId" }, { status: 400 });
   }
+
+  if (MOCK_MODE) return NextResponse.json({ rounds: [mockRound(groupId).round] });
 
   const rounds = await prisma.round.findMany({
     where: { groupId },

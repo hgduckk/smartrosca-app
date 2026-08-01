@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { UserName } from "@/components/UserName";
 
 // Trang chủ (Màn hình chính) — dựng theo mẫu Figma. Dữ liệu hiện là mẫu tĩnh;
 // sẽ nối API (dashboard, hụi, ví) ở giai đoạn "chức năng thật".
@@ -76,24 +77,24 @@ export default function Home() {
           </span>
           <div className="home-greet-text">
             <p className="home-greet-hi">
-              Xin chào, <b>Nguyễn Văn A</b>
+              Xin chào, <UserName fallback="Nguyễn Văn A" />
             </p>
             <p className="home-greet-sub">Chào mừng trở lại</p>
           </div>
         </div>
         <div className="home-header-actions">
-          <button className="home-icon-btn" aria-label="Thông báo">
+          <Link href="/dashboard" className="home-icon-btn" aria-label="Thông báo">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6Z" />
               <path d="M10 20a2 2 0 0 0 4 0" />
             </svg>
-          </button>
-          <button className="home-icon-btn" aria-label="Cài đặt">
+          </Link>
+          <Link href="/profile" className="home-icon-btn" aria-label="Cài đặt">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="3" />
               <path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1v.2a2 2 0 0 1-4 0v-.1A1.6 1.6 0 0 0 7 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 2.6 14v-.1a2 2 0 0 1 0-3.8h.2A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 10 4.6h.1A1.6 1.6 0 0 0 11 2.6v-.2a2 2 0 0 1 4 0v.2A1.6 1.6 0 0 0 17 4.6a1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1A1.6 1.6 0 0 0 21.4 10v.1a1.6 1.6 0 0 0 0 3.8Z" />
             </svg>
-          </button>
+          </Link>
         </div>
       </header>
 
