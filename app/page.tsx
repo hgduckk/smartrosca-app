@@ -43,8 +43,8 @@ const QUICK_ACTIONS = [
 ];
 
 const MY_HUI = [
-  { name: "Hụi XXX", due: "05/02", amount: "500.000 đ" },
-  { name: "Hụi YYY", due: "12/02", amount: "1.000.000 đ" },
+  { id: "grp-xxx", name: "Hụi XXX", due: "05/02", amount: "500.000 đ" },
+  { id: "grp-yyy", name: "Hụi YYY", due: "12/02", amount: "1.000.000 đ" },
 ];
 
 function ActionIcon({ children }: { children: React.ReactNode }) {
@@ -151,7 +151,7 @@ export default function Home() {
         </div>
         <div className="home-due-right">
           <span className="home-due-timer">00 : 00 : 00</span>
-          <button className="home-due-btn">Đóng ngay</button>
+          <Link href="/groups/grp-xxx?tab=payments" className="home-due-btn">Đóng ngay</Link>
         </div>
       </div>
 
@@ -165,7 +165,7 @@ export default function Home() {
               <p className="home-hui-due">Kỳ hạn : {h.due}</p>
               <p className="home-hui-amount">{h.amount}</p>
             </div>
-            <Link href="/groups" className="home-hui-btn">
+            <Link href={`/groups/${h.id}`} className="home-hui-btn">
               Chi tiết
             </Link>
           </div>

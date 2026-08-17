@@ -1,202 +1,130 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { useWallet } from "@/lib/wallet-context";
-import { useKycStatus } from "@/lib/use-kyc-status";
-import { creditScoreLevel } from "@/lib/credit-score-level";
 import { useToast } from "@/components/ToastProvider";
-import { Skeleton } from "@/components/Skeleton";
-
-type CreditScoreEvent = {
-  id: string;
-  delta: number;
-  reason: string;
-  createdAt: string;
-};
-
-type ProfileData = {
-  creditScore: { score: number; updatedAt: string | null };
-  creditScoreEvents: CreditScoreEvent[];
-};
 
 function truncate(address: string) {
   return `${address.slice(0, 8)}...${address.slice(-6)}`;
 }
 
-function kycLabel(status: string | null) {
-  if (status === "VERIFIED") return { label: "Đã xác thực", variant: "success" as const };
-  if (status === "REJECTED") return { label: "Bị từ chối", variant: "danger" as const };
-  return { label: "Chưa xác thực", variant: "warning" as const };
+function Chevron() {
+  return (
+    <svg className="pf-row-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="m9 6 6 6-6 6" />
+    </svg>
+  );
+}
+
+function Icon({ children }: { children: React.ReactNode }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      {children}
+    </svg>
+  );
 }
 
 export default function ProfilePage() {
   const router = useRouter();
   const { user, logout } = useAuth();
-  const { address, connect, isConnecting } = useWallet();
-  const { status: kycStatus, loading: kycLoading } = useKycStatus(address);
+  const { address } = useWallet();
   const toast = useToast();
+
+  const accountLabel = user?.account ? user.account : address ? truncate(address) : "—";
 
   function handleLogout() {
     logout();
     router.replace("/login");
   }
-  const [data, setData] = useState<ProfileData | null>(null);
-  const [loading, setLoading] = useState(false);
 
-  const load = useCallback(async () => {
-    if (!address) {
-      setData(null);
-      return;
-    }
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/dashboard?walletAddress=${address}`);
-      if (res.ok) {
-        setData(await res.json());
-      } else {
-        toast("Không tải được hồ sơ", "error");
-      }
-    } catch {
-      toast("Không tải được hồ sơ", "error");
-    } finally {
-      setLoading(false);
-    }
-  }, [address, toast]);
+  const soon = () => toast("Tính năng đang được phát triển", "info");
 
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  if (!address) {
-    return (
-      <main className="page">
-        <h1>Hồ sơ</h1>
-        <div className="card stack">
-          <p className="muted" style={{ margin: 0 }}>
-            Kết nối ví để xem hồ sơ, trạng thái eKYC và điểm tín nhiệm của bạn.
-          </p>
-          <button
-            className="btn btn-primary"
-            onClick={connect}
-            disabled={isConnecting}
-            style={{ alignSelf: "flex-start" }}
-          >
-            {isConnecting ? "Đang kết nối..." : "Kết nối ví"}
-          </button>
-        </div>
-      </main>
-    );
-  }
-
-  const ekyc = kycLabel(kycStatus);
-  const level = data ? creditScoreLevel(data.creditScore.score) : null;
+  // Mỗi mục: icon + nhãn + hành động (điều hướng hoặc toast "đang phát triển").
+  const items: { label: string; icon: React.ReactNode; onClick: () => void; danger?: boolean }[] = [
+    {
+      label: "Thông tin cá nhân",
+      icon: (<Icon><circle cx="12" cy="8.2" r="3.2" /><path d="M5 20c0-3.5 3.1-6.2 7-6.2s7 2.7 7 6.2" /></Icon>),
+      onClick: soon,
+    },
+    {
+      label: "Trust Score",
+      icon: (<Icon><path d="M12 3 5 6v5c0 4.4 3 7.6 7 9 4-1.4 7-4.6 7-9V6l-7-3Z" /><path d="m9 12 2 2 4-4" /></Icon>),
+      onClick: () => router.push("/trust-score"),
+    },
+    {
+      label: "Tài khoản liên kết",
+      icon: (<Icon><path d="M3 10.5 12 4l9 6.5" /><path d="M5 10.5V19M9.5 10.5V19M14.5 10.5V19M19 10.5V19M3.5 19h17" /></Icon>),
+      onClick: () => router.push("/accounts"),
+    },
+    {
+      label: "Nguồn thanh toán",
+      icon: (<Icon><rect x="3" y="6" width="18" height="13" rx="3" /><path d="M3 10h18" /><circle cx="16.5" cy="14.5" r="1.2" fill="currentColor" stroke="none" /></Icon>),
+      onClick: () => router.push("/accounts/link"),
+    },
+    {
+      label: "Đổi mật khẩu",
+      icon: (<Icon><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></Icon>),
+      onClick: () => router.push("/forgot-password"),
+    },
+    {
+      label: "Thiết bị đăng nhập",
+      icon: (<Icon><rect x="3" y="4" width="18" height="12" rx="2" /><path d="M8 20h8M12 16v4" /></Icon>),
+      onClick: soon,
+    },
+    {
+      label: "Cài đặt",
+      icon: (<Icon><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1v.2a2 2 0 0 1-4 0v-.1A1.6 1.6 0 0 0 7 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 2.6 14v-.1a2 2 0 0 1 0-3.8h.2A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 10 4.6h.1A1.6 1.6 0 0 0 11 2.6v-.2a2 2 0 0 1 4 0v.2A1.6 1.6 0 0 0 17 4.6a1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1A1.6 1.6 0 0 0 21.4 10v.1a1.6 1.6 0 0 0 0 3.8Z" /></Icon>),
+      onClick: soon,
+    },
+    {
+      label: "Trung tâm trợ giúp",
+      icon: (<Icon><circle cx="12" cy="12" r="9" /><path d="M9.5 9.5a2.5 2.5 0 0 1 4.5 1.5c0 1.6-2 1.9-2 3.5M12 17.5h.01" /></Icon>),
+      onClick: soon,
+    },
+  ];
 
   return (
-    <main className="page">
-      <h1>Hồ sơ</h1>
+    <main className="pf">
+      <header className="pf-header">
+        <h1 className="pf-title">Hồ sơ</h1>
+        <div className="pf-header-actions">
+          <button className="pf-icon-btn" aria-label="Thông báo" onClick={soon}>
+            <Icon><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6Z" /><path d="M10 20a2 2 0 0 0 4 0" /></Icon>
+          </button>
+          <button className="pf-icon-btn" aria-label="Cài đặt" onClick={soon}>
+            <Icon><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1v.2a2 2 0 0 1-4 0v-.1A1.6 1.6 0 0 0 7 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 2.6 14v-.1a2 2 0 0 1 0-3.8h.2A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 10 4.6h.1A1.6 1.6 0 0 0 11 2.6v-.2a2 2 0 0 1 4 0v.2A1.6 1.6 0 0 0 17 4.6a1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1A1.6 1.6 0 0 0 21.4 10v.1a1.6 1.6 0 0 0 0 3.8Z" /></Icon>
+          </button>
+        </div>
+      </header>
 
-      <div className="card">
-        <div className="profile-header">
-          <span className="profile-avatar">
-            <svg
-              width="28"
-              height="28"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={1.9}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <circle cx="12" cy="8.2" r="3.2" />
-              <path d="M5 20c0-3.5 3.1-6.2 7-6.2s7 2.7 7 6.2" />
-            </svg>
+      {/* Thẻ hồ sơ → Trust Score */}
+      <button type="button" className="pf-card" onClick={() => router.push("/trust-score")}>
+        <span className="pf-avatar">
+          <Icon><circle cx="12" cy="8.5" r="3.6" /><path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6" /></Icon>
+        </span>
+        <div className="pf-card-body">
+          <p className="pf-card-name">{user?.name ?? "Người dùng"}</p>
+          <span className="pf-badge">Thành viên</span>
+          <p className="pf-card-sub">{accountLabel}</p>
+        </div>
+        <Chevron />
+      </button>
+
+      <div className="pf-menu">
+        {items.map((it) => (
+          <button key={it.label} type="button" className="pf-row" onClick={it.onClick}>
+            <span className="pf-row-icon">{it.icon}</span>
+            <span className="pf-row-label">{it.label}</span>
+            <Chevron />
+          </button>
+        ))}
+
+        <button type="button" className="pf-row pf-row--danger" onClick={handleLogout}>
+          <span className="pf-row-icon">
+            <Icon><path d="M15 12H4M8 8l-4 4 4 4" /><path d="M9 4h9a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-9" /></Icon>
           </span>
-          <div>
-            <p style={{ margin: 0, fontWeight: 700 }}>{user?.name ?? "Người dùng"}</p>
-            <p className="profile-address muted" style={{ margin: "0.15rem 0 0" }}>
-              {user?.account ? `Tài khoản: ${user.account}` : truncate(address)}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="card">
-        <div className="profile-row" style={{ paddingTop: 0 }}>
-          <span>Trạng thái eKYC</span>
-          {kycLoading ? (
-            <span className="muted">Đang kiểm tra...</span>
-          ) : (
-            <span className={`badge badge-${ekyc.variant}`}>{ekyc.label}</span>
-          )}
-        </div>
-        {!kycLoading && kycStatus !== "VERIFIED" && (
-          <div className="profile-row" style={{ paddingBottom: 0 }}>
-            <span className="muted" style={{ fontSize: "0.85rem" }}>
-              Xác thực eKYC để tạo &amp; tham gia dây hụi.
-            </span>
-            <Link href="/kyc" className="btn btn-primary btn-sm">
-              Xác thực ngay
-            </Link>
-          </div>
-        )}
-      </div>
-
-      <div className="card">
-        <h2 style={{ marginTop: 0 }}>Credit Score</h2>
-        {loading && !data && (
-          <div className="stack" style={{ gap: "0.6rem" }} aria-busy="true">
-            <Skeleton width="35%" height="2.25rem" radius="10px" />
-            <Skeleton width="90px" height="1.5rem" radius="999px" />
-            <Skeleton width="60%" height="0.9rem" style={{ marginTop: "0.6rem" }} />
-            <Skeleton width="80%" height="0.85rem" />
-            <Skeleton width="70%" height="0.85rem" />
-          </div>
-        )}
-        {data && level && (
-          <>
-            <p className="stat-number" style={{ color: `var(--color-${level.variant})` }}>
-              {data.creditScore.score}
-            </p>
-            <span className={`badge badge-${level.variant}`}>{level.label}</span>
-
-            <h3 style={{ marginTop: "1.25rem" }}>Lịch sử thay đổi điểm</h3>
-            {data.creditScoreEvents.length === 0 && (
-              <p className="empty-state">Chưa có thay đổi nào.</p>
-            )}
-            <ul className="list-plain">
-              {data.creditScoreEvents.map((e) => (
-                <li key={e.id} className="muted">
-                  {new Date(e.createdAt).toLocaleString("vi-VN")} —{" "}
-                  <strong
-                    style={{ color: e.delta >= 0 ? "var(--color-success)" : "var(--color-danger)" }}
-                  >
-                    {e.delta > 0 ? "+" : ""}
-                    {e.delta}
-                  </strong>{" "}
-                  ({e.reason})
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
-      </div>
-
-      <div className="card">
-        <button
-          className="btn btn-outline"
-          onClick={handleLogout}
-          style={{ width: "100%", color: "var(--color-danger)", borderColor: "var(--color-danger)" }}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M15 12H4M8 8l-4 4 4 4" />
-            <path d="M9 4h9a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-9" />
-          </svg>
-          Đăng xuất
+          <span className="pf-row-label">Đăng xuất</span>
         </button>
       </div>
     </main>

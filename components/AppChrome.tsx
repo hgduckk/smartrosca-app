@@ -20,11 +20,21 @@ const BARE_PREFIXES = [
   "/reset-password",
   "/reset-success",
   "/verify", // luồng eKYC mới: /verify, /verify/cccd-front, ...
+  "/accounts", // luồng liên kết nguồn thanh toán: full-screen, có back-nav riêng
+  "/trust-score", // màn Trust Score nền tối, full-screen, có back-nav riêng
+];
+
+// Route động chạy full-screen (không header/tabbar) nhưng vẫn cần đăng nhập:
+// chi tiết dây hụi và màn tham gia hụi (có header/tab riêng theo mẫu Figma).
+const BARE_PATTERNS = [
+  /^\/groups\/[^/]+$/, // /groups/<id> — chi tiết dây hụi
+  /^\/groups\/[^/]+\/join$/, // /groups/<id>/join — tham gia hụi
 ];
 
 function isBareRoute(pathname: string) {
-  return BARE_PREFIXES.some(
-    (p) => pathname === p || pathname.startsWith(`${p}/`),
+  return (
+    BARE_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`)) ||
+    BARE_PATTERNS.some((re) => re.test(pathname))
   );
 }
 
@@ -54,7 +64,7 @@ function isPublicRoute(pathname: string) {
 // trong nội dung cuộn — vì vậy cả khung nằm ở client component này.
 // Trang chủ mới có header riêng (lời chào + chuông + cài đặt) nên ẩn app-header
 // chung nhưng vẫn giữ thanh tab dưới.
-const NO_HEADER_ROUTES = new Set(["/"]);
+const NO_HEADER_ROUTES = new Set(["/", "/profile"]);
 
 export function AppChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();

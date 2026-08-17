@@ -122,7 +122,7 @@ export default function DashboardPage() {
       <h1>Dashboard</h1>
 
       <div className="card" style={{ borderColor: levelColor }}>
-        <h2 style={{ marginTop: 0 }}>Credit Score</h2>
+        <h2 style={{ marginTop: 0 }}>Trust Score</h2>
         <p className="stat-number" style={{ color: levelColor }}>
           {data.creditScore.score}
         </p>

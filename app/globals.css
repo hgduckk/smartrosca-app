@@ -2255,3 +2255,1403 @@ textarea {
 .btn-outline {
   border-radius: 12px;
 }
+
+/* ================================================================
+   NGUỒN LIÊN KẾT / TÀI KHOẢN LIÊN KẾT — theo mẫu Figma
+   Nền dùng .ob-screen (trắng → tím nhạt) + WaveBg. Prefix `.ln-`.
+   ================================================================ */
+
+/* ---- Thanh điều hướng trên (back + tiêu đề giữa) ---- */
+.ln-nav {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  margin-bottom: 1.4rem;
+}
+.ln-nav-back {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--ob-heading);
+  cursor: pointer;
+}
+.ln-nav-back svg {
+  width: 24px;
+  height: 24px;
+}
+.ln-nav-title {
+  margin: 0;
+  padding: 0 2.75rem;
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  color: var(--ob-heading);
+  text-align: center;
+}
+
+/* ---- Nhãn nhóm mục (Ngân hàng / Ví điện tử / Chọn ...) ---- */
+.ln-section {
+  margin: 1.6rem 0 0.9rem;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--color-primary);
+}
+.ln-section:first-of-type {
+  margin-top: 0.3rem;
+}
+
+/* ---- Ô logo nguồn thanh toán (ảnh logo thật) ---- */
+.ln-logo {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+}
+.ln-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ---- Hàng tài khoản đã liên kết ---- */
+.ln-acct {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  width: 100%;
+  text-align: left;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 0.85rem 1rem;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.1s;
+}
+.ln-acct + .ln-acct {
+  margin-top: 0.85rem;
+}
+.ln-acct:active {
+  transform: scale(0.99);
+}
+.ln-acct-body {
+  flex: 1;
+  min-width: 0;
+}
+.ln-acct-name {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+.ln-acct-sub {
+  margin: 0.15rem 0 0;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.ln-acct-default {
+  flex: none;
+  align-self: center;
+  padding: 0.2rem 0.6rem;
+  border-radius: 8px;
+  background: var(--color-success-bg);
+  color: var(--color-success);
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.ln-acct-chevron {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  color: var(--color-text-muted);
+}
+
+/* ---- Nút thêm nguồn (viền đứt) ---- */
+.ln-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  margin-top: 0.95rem;
+  padding: 0.85rem 1rem;
+  border: 1.5px dashed var(--color-primary);
+  border-radius: 14px;
+  background: transparent;
+  color: var(--color-primary);
+  font: inherit;
+  font-size: 0.98rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.ln-add:hover {
+  background: var(--color-primary-soft);
+}
+.ln-add svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ---- Thẻ lựa chọn loại nguồn (Ngân hàng / Ví điện tử) ---- */
+.ln-choice {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  text-align: left;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  padding: 1.15rem 1.15rem;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.1s;
+}
+.ln-choice + .ln-choice {
+  margin-top: 1.1rem;
+}
+.ln-choice:hover {
+  border-color: var(--color-primary);
+}
+.ln-choice:active {
+  transform: scale(0.99);
+}
+.ln-choice-icon {
+  flex: none;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 35% 30%, #efe7fe, #d9c9fb);
+  color: var(--color-primary);
+}
+.ln-choice-icon svg {
+  width: 36px;
+  height: 36px;
+}
+.ln-choice-body {
+  flex: 1;
+  min-width: 0;
+}
+.ln-choice-title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--ob-heading);
+}
+.ln-choice-desc {
+  margin: 0.25rem 0 0;
+  font-size: 0.88rem;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+/* ---- Chỉ báo tiến trình 3 bước ---- */
+.ln-steps {
+  display: flex;
+  align-items: center;
+  margin: 0.2rem 0 1.5rem;
+}
+.ln-step-cell {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+.ln-step-cell:last-child {
+  flex: 0 0 auto;
+}
+.ln-step-num {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 800;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+}
+.ln-step-num.is-active,
+.ln-step-num.is-done {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+.ln-step-line {
+  flex: 1;
+  height: 2px;
+  margin: 0 0.35rem;
+  background: var(--color-border);
+  border-radius: 2px;
+}
+.ln-step-line.is-done {
+  background: var(--color-primary);
+}
+
+/* ---- Ô tìm kiếm ngân hàng ---- */
+.ln-search {
+  position: relative;
+  margin-bottom: 0.9rem;
+}
+.ln-search input {
+  width: 100%;
+  font: inherit;
+  font-size: 16px;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 0.8rem 2.6rem 0.8rem 1rem;
+}
+.ln-search input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-soft-strong);
+}
+.ln-search svg {
+  position: absolute;
+  right: 0.9rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+/* ---- Danh sách ngân hàng (rows trong 1 khối bo góc) ---- */
+.ln-bank-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--color-surface);
+}
+.ln-bank-row {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  width: 100%;
+  text-align: left;
+  padding: 0.75rem 0.9rem;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+  font: inherit;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.ln-bank-row:last-child {
+  border-bottom: none;
+}
+.ln-bank-row:hover {
+  background: var(--color-surface-muted);
+}
+.ln-bank-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+.ln-bank-row .ln-acct-chevron {
+  color: var(--color-primary);
+}
+.ln-empty {
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+/* ---- Lưới ví điện tử (thẻ lớn) ---- */
+.ln-wallet {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  text-align: left;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 0.85rem 1.1rem;
+  box-shadow: var(--shadow-sm);
+  color: var(--color-text);
+  font: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.1s;
+}
+.ln-wallet + .ln-wallet {
+  margin-top: 1rem;
+}
+.ln-wallet:hover {
+  border-color: var(--color-primary);
+}
+.ln-wallet:active {
+  transform: scale(0.99);
+}
+.ln-wallet-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+/* ---- Thẻ tóm tắt (bước xác thực thông tin) ---- */
+.ln-summary {
+  border: 1px solid var(--color-primary-soft-strong);
+  border-radius: 18px;
+  padding: 1.35rem 1.4rem;
+  /* Nền tím nhạt theo token để đọc rõ ở cả sáng & tối (tránh chữ trắng trên nền
+     sáng khi dark mode). */
+  background: var(--color-primary-soft);
+}
+.ln-summary-head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  margin-bottom: 1.1rem;
+}
+.ln-summary-head b {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--ob-heading);
+}
+.ln-summary-row + .ln-summary-row {
+  margin-top: 1rem;
+}
+.ln-summary-label {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+.ln-summary-value {
+  margin: 0.15rem 0 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--color-text);
+  word-break: break-word;
+}
+
+/* ---- Màn chuyển hướng ví (logo lớn + ghi chú) ---- */
+.ln-redirect-logo {
+  align-self: center;
+  border-radius: 26px;
+  box-shadow: var(--shadow-md);
+}
+.ln-redirect-note {
+  margin: 1.6rem 0 0;
+  text-align: center;
+  font-size: 1.05rem;
+  line-height: 1.5;
+  color: var(--color-text);
+}
+
+/* ---- Thẻ tài khoản nhỏ trên màn thành công ---- */
+.ln-done-card {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  width: 100%;
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 1rem 1.1rem;
+  margin-top: 1.75rem;
+  text-align: left;
+}
+.ln-done-body {
+  min-width: 0;
+}
+.ln-done-name {
+  margin: 0;
+  font-weight: 800;
+  color: var(--color-text);
+}
+.ln-done-sub {
+  margin: 0.3rem 0 0;
+  font-size: 0.88rem;
+  color: var(--color-text-muted);
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ================================================================
+   CHI TIẾT DÂY HỤI (Tổng quan / Thành viên / Thanh toán / Lịch sử)
+   Dùng .ob-screen làm nền. Prefix `.hd-`.
+   ================================================================ */
+.hd-screen {
+  padding-left: 1.15rem;
+  padding-right: 1.15rem;
+}
+
+/* ---- Header ---- */
+.hd-top {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-bottom: 0.6rem;
+}
+.hd-back {
+  flex: none;
+  width: 30px;
+  height: 34px;
+  margin-left: -0.35rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--ob-heading);
+  cursor: pointer;
+}
+.hd-back svg {
+  width: 24px;
+  height: 24px;
+}
+.hd-avatar {
+  flex: none;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  background: radial-gradient(circle at 50% 38%, #ffe1f1, #e7d4fb);
+  border: 2px solid #c9b8f0;
+}
+.hd-title-block {
+  flex: 1;
+  min-width: 0;
+}
+.hd-title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--ob-heading);
+}
+.hd-sub {
+  margin: 0.1rem 0 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+.hd-actions {
+  display: flex;
+  gap: 0.45rem;
+  flex: none;
+}
+.hd-icon-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+}
+.hd-icon-btn svg {
+  width: 19px;
+  height: 19px;
+}
+
+/* ---- Tab bar ---- */
+.hd-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--color-border);
+  margin: 0.3rem 0 1.2rem;
+}
+.hd-tab {
+  flex: 1;
+  position: relative;
+  background: none;
+  border: none;
+  padding: 0.6rem 0.15rem 0.7rem;
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+.hd-tab.is-active {
+  color: var(--ob-heading);
+  font-weight: 800;
+}
+.hd-tab.is-active::after {
+  content: "";
+  position: absolute;
+  left: 14%;
+  right: 14%;
+  bottom: -1px;
+  height: 2.5px;
+  border-radius: 3px;
+  background: var(--color-primary);
+}
+
+/* ---- Tổng quan: thanh tiến độ ---- */
+.hd-progress {
+  background: var(--color-primary-soft);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 1.05rem 1.2rem;
+  margin-bottom: 1.1rem;
+}
+.hd-progress-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.hd-progress-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--ob-heading);
+}
+.hd-progress-round {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+.hd-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin: 0.75rem 0 0.55rem;
+}
+.hd-progress-track {
+  flex: 1;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+}
+.hd-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #34d17a, #22a06b);
+}
+.hd-progress-pct {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--ob-heading);
+  font-variant-numeric: tabular-nums;
+}
+.hd-progress-note {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+/* ---- Tổng quan: lưới thống kê ---- */
+.hd-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--color-surface);
+}
+.hd-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.95rem 0.85rem;
+  border-right: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+.hd-stat:nth-child(2n) {
+  border-right: none;
+}
+.hd-stat:nth-last-child(-n + 2) {
+  border-bottom: none;
+}
+.hd-stat-icon {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.hd-stat-icon svg {
+  width: 20px;
+  height: 20px;
+}
+.hd-stat-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+}
+.hd-stat-label {
+  font-size: 0.74rem;
+  color: var(--color-text-muted);
+  line-height: 1.2;
+}
+.hd-stat-value {
+  font-size: 1.02rem;
+  font-weight: 800;
+  color: var(--color-primary-hover);
+}
+
+/* ---- Tổng quan: nút dưới ---- */
+.hd-footer {
+  display: flex;
+  gap: 0.8rem;
+  margin-top: 1.5rem;
+}
+.hd-footer .btn {
+  min-height: 52px;
+  border-radius: 14px;
+  font-size: 1rem;
+}
+.hd-footer .btn-outline {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* ---- Danh sách (Thành viên / Thanh toán) ---- */
+.hd-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+.hd-member,
+.hd-pay {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 0.8rem 1rem;
+  box-shadow: var(--shadow-sm);
+}
+.hd-member-avatar {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+}
+.hd-member-body {
+  flex: 1;
+  min-width: 0;
+}
+.hd-member-name {
+  margin: 0;
+  font-weight: 700;
+}
+.hd-member-sub {
+  margin: 0.15rem 0 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+.hd-pay {
+  justify-content: space-between;
+}
+.hd-pay-title {
+  margin: 0;
+  font-weight: 700;
+}
+.hd-pay-sub {
+  margin: 0.15rem 0 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+.hd-pay-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.4rem;
+  flex: none;
+}
+.hd-pay-amount {
+  font-weight: 800;
+  color: var(--color-primary-hover);
+}
+
+/* ---- Lịch sử đấu giá: timeline ---- */
+.hd-timeline {
+  position: relative;
+  padding-left: 1.75rem;
+}
+.hd-timeline::before {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  border-radius: 2px;
+  background: linear-gradient(var(--color-primary), var(--color-primary-soft-strong));
+}
+.hd-tl-item {
+  position: relative;
+  margin-bottom: 0.8rem;
+}
+.hd-tl-dot {
+  position: absolute;
+  left: -1.75rem;
+  top: 15px;
+  margin-left: 1px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+}
+.hd-tl-dot.is-active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.hd-tl-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 0.85rem 0.95rem;
+  box-shadow: var(--shadow-sm);
+}
+.hd-tl-card.is-ongoing {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+}
+.hd-tl-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+.hd-tl-round {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+.hd-tl-winner {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+.hd-tl-avatar {
+  flex: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  color: var(--color-primary);
+}
+.hd-tl-winner-text {
+  flex: 1;
+  min-width: 0;
+}
+.hd-tl-name {
+  margin: 0;
+  font-weight: 700;
+  font-size: 1rem;
+}
+.hd-tl-price {
+  margin: 0.15rem 0 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+.hd-tl-price b {
+  color: var(--color-text);
+}
+.hd-tl-saved {
+  flex: none;
+  text-align: right;
+  font-size: 0.74rem;
+  color: var(--color-text-muted);
+  line-height: 1.35;
+}
+.hd-tl-saved b {
+  color: var(--color-success);
+  font-size: 0.9rem;
+}
+.hd-tl-question {
+  margin: 0;
+  font-weight: 700;
+  color: var(--ob-heading);
+}
+.hd-tl-compact {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.88rem;
+  color: var(--color-text-muted);
+}
+.hd-badge-ongoing {
+  background: var(--color-primary-soft-strong);
+  color: var(--color-primary);
+}
+.hd-badge-upcoming {
+  background: transparent;
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* ================================================================
+   THAM GIA HỤI — theo mẫu Figma. Prefix `.jn-`.
+   ================================================================ */
+.jn-card {
+  border-radius: 20px;
+  overflow: hidden;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-md);
+}
+.jn-card-head {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 1.3rem 1.3rem;
+  background: linear-gradient(120deg, #8b5cf6 0%, #6c4bf4 55%, #5227b0 100%);
+  color: #fff;
+}
+.jn-card-avatar {
+  flex: none;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  border: 3px solid rgba(255, 255, 255, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+}
+.jn-card-avatar svg {
+  width: 34px;
+  height: 34px;
+}
+.jn-card-name {
+  margin: 0;
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #fff;
+}
+.jn-card-org {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 1.3rem;
+  border-bottom: 1px solid var(--color-border);
+}
+.jn-org-label {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+.jn-org-person {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.45rem;
+}
+.jn-org-avatar {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.jn-org-avatar svg {
+  width: 22px;
+  height: 22px;
+}
+.jn-org-name {
+  font-weight: 600;
+}
+.jn-trust {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: none;
+}
+.jn-trust svg {
+  width: 30px;
+  height: 30px;
+}
+.jn-trust-score {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--color-primary);
+  line-height: 1;
+}
+.jn-trust-label {
+  margin: 0.15rem 0 0;
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+.jn-card-stats {
+  display: flex;
+}
+.jn-stat {
+  flex: 1;
+  text-align: center;
+  padding: 1rem 0.5rem;
+}
+.jn-stat + .jn-stat {
+  border-left: 1px solid var(--color-border);
+}
+.jn-stat-value {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--color-primary);
+}
+.jn-stat-label {
+  margin: 0.2rem 0 0;
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+}
+.jn-section {
+  margin: 1.6rem 0 0.9rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+.jn-detail {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 0.3rem 1.1rem;
+  box-shadow: var(--shadow-sm);
+}
+.jn-detail-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 0;
+}
+.jn-detail-row + .jn-detail-row {
+  border-top: 1px solid var(--color-border);
+}
+.jn-detail-label {
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+}
+.jn-detail-value {
+  font-weight: 700;
+  text-align: right;
+}
+
+/* ================================================================
+   HỒ SƠ (menu) — theo mẫu Figma. Prefix `.pf-`.
+   ================================================================ */
+.pf {
+  padding: calc(1.1rem + env(safe-area-inset-top, 0px)) 1.1rem 1.5rem;
+  background: var(--color-bg);
+}
+.pf-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  margin-bottom: 1.25rem;
+}
+.pf-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--ob-heading);
+}
+.pf-header-actions {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  gap: 0.5rem;
+}
+.pf-icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+}
+.pf-icon-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Thẻ hồ sơ */
+.pf-card {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  width: 100%;
+  text-align: left;
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-primary-soft-strong);
+  border-radius: 18px;
+  padding: 1rem 1.1rem;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  margin-bottom: 1.4rem;
+}
+.pf-avatar {
+  flex: none;
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-primary);
+  color: var(--color-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.pf-avatar svg {
+  width: 34px;
+  height: 34px;
+}
+.pf-card-body {
+  flex: 1;
+  min-width: 0;
+}
+.pf-card-name {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--color-text);
+}
+.pf-badge {
+  display: inline-block;
+  margin: 0.3rem 0;
+  padding: 0.15rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #fff;
+  background: var(--ob-gradient);
+}
+.pf-badge--warn {
+  background: var(--color-warning);
+}
+.pf-card-sub {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Danh sách mục */
+.pf-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+.pf-row {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  width: 100%;
+  text-align: left;
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 0.85rem 1rem;
+  font: inherit;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+.pf-row:hover {
+  border-color: var(--color-primary);
+}
+.pf-row:active {
+  transform: scale(0.995);
+}
+.pf-row-icon {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+}
+.pf-row-icon svg {
+  width: 22px;
+  height: 22px;
+}
+.pf-row-label {
+  flex: 1;
+  min-width: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+.pf-row-chevron {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  color: var(--color-text-muted);
+}
+.pf-row--danger {
+  margin-top: 0.4rem;
+  justify-content: center;
+  color: var(--color-danger);
+}
+.pf-row--danger .pf-row-icon {
+  color: var(--color-danger);
+  width: auto;
+}
+.pf-row--danger .pf-row-label {
+  flex: none;
+  font-weight: 700;
+  color: var(--color-danger);
+}
+
+/* ================================================================
+   TRUST SCORE — màn nền tối + gauge (theo photo public/Figma/trustscore).
+   Luôn tối bất kể theme app. Prefix `.tsx-`.
+   ================================================================ */
+.tsx-screen {
+  flex: 1 0 auto;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: calc(1.4rem + env(safe-area-inset-top, 0px)) 1.3rem
+    calc(1.6rem + env(safe-area-inset-bottom, 0px));
+  background:
+    radial-gradient(120% 80% at 50% 0%, #34206f 0%, #281a5c 45%, #1e123f 100%);
+  color: #fff;
+  overflow: hidden;
+}
+.tsx-nav {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  margin-bottom: 0.5rem;
+}
+.tsx-back {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+}
+.tsx-back svg {
+  width: 24px;
+  height: 24px;
+}
+.tsx-title {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+/* Gauge */
+.tsx-gauge {
+  position: relative;
+  width: min(300px, 88%);
+  margin: 1.5rem auto 0;
+}
+.tsx-gauge-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+.tsx-gauge-center {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 44%;
+  transform: translateY(-42%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+.tsx-score {
+  margin: 0;
+  font-size: 3.6rem;
+  font-weight: 800;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+}
+.tsx-max {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #b3a4ec;
+}
+.tsx-max b {
+  color: #8b7cf6;
+}
+.tsx-tier {
+  margin-top: 0.35rem;
+  padding: 0.32rem 1.1rem;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #06341a;
+}
+.tsx-note {
+  margin: 1rem 0 0;
+  text-align: center;
+  font-size: 0.95rem;
+  color: #b7abe0;
+}
+
+/* Thẻ điều hướng */
+.tsx-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  margin-top: 2rem;
+}
+.tsx-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  text-align: left;
+  padding: 1.05rem 1.2rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.tsx-card:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+.tsx-card-body {
+  flex: 1;
+  min-width: 0;
+}
+.tsx-card-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+.tsx-card-desc {
+  margin: 0.3rem 0 0;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: #b7abe0;
+}
+.tsx-card-chevron {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  color: #cfc4f2;
+  transition: transform 0.15s;
+}
+
+/* Lịch sử cộng điểm (mở rộng) */
+.tsx-history {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.3rem 0.2rem;
+}
+.tsx-history-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem 1rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+}
+.tsx-history-reason {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+.tsx-history-date {
+  margin: 0.15rem 0 0;
+  font-size: 0.78rem;
+  color: #a99fce;
+}
+.tsx-history-delta {
+  font-weight: 800;
+  font-size: 1rem;
+  flex: none;
+}
+.tsx-history-empty {
+  margin: 0;
+  padding: 0.5rem;
+  text-align: center;
+  color: #a99fce;
+  font-size: 0.9rem;
+}

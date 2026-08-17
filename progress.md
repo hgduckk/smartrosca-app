@@ -120,6 +120,60 @@ thư viện UI nào**, giữ đúng yêu cầu dependency tối thiểu:
   `groups/[id]/bid`, `dashboard`, và 2 component dùng chung.
 - Đã kiểm tra bằng Chrome thật (dark mode tự nhận đúng, layout gọn gàng).
 
+### 3.1. Luồng "Liên kết nguồn thanh toán" (theo mẫu Figma)
+
+Dựng đầy đủ 9 màn Figma còn thiếu route (`public/Figma/Nguôn liên kết-*`,
+`Tài khoản liên kết`). Toàn bộ full-screen, có back-nav riêng (đã thêm
+`/accounts` vào `BARE_PREFIXES` trong `AppChrome` — bare nhưng vẫn yêu cầu đăng
+nhập vì không nằm trong `PUBLIC_PREFIXES`). Không thêm thư viện nào.
+
+- `lib/payment-providers.ts`: danh mục 6 ngân hàng + 4 ví điện tử (tên/màu/ký
+  hiệu), và tầng lưu tài khoản đã liên kết trong `localStorage` (seed khớp mẫu:
+  Vietcombank mặc định, MB Bank, MoMo). Helper: `read/add/setDefault/remove`,
+  `maskNumber`. Giai đoạn thật thay tầng lưu này bằng API/DB, giữ nguyên UI.
+- `components/accounts/`: `LinkNav` (back + tiêu đề giữa) & `StepDots` (1-2-3),
+  `ProviderLogo` (ô logo mock bằng ký hiệu ngắn trên nền brand).
+- Route: `app/accounts/page.tsx` (danh sách, đặt mặc định khi chạm),
+  `app/accounts/link/page.tsx` (chọn loại nguồn), `app/accounts/link/bank`
+  (wizard 1 trang, state-machine: chọn NH → nhập TT → xác thực → OTP → thành
+  công), `app/accounts/link/wallet` (chọn ví → chuyển hướng app → thành công).
+  Tái dùng `OtpInput`, `SuccessCheck`, `WaveBg`, các primitive `.ob-*`.
+- CSS `.ln-*` cuối `globals.css` — theme-aware (thẻ tóm tắt dùng
+  `--color-primary-soft` để chữ đọc rõ ở cả sáng & tối).
+- Entry point: thêm hàng "Tài khoản liên kết" ở trang Hồ sơ → `/accounts`.
+- Đã kiểm thử end-to-end bằng Chrome headless (CDP): cả 2 wizard chạy đủ bước,
+  ảnh chụp khớp mẫu; tsc + eslint sạch.
+- Logo ngân hàng/ví: dùng ảnh thật user tải lên trong `public/bank-wallet-logo/`
+  (10 file png/jpg), render `<img>` phủ kín ô bo góc, nền trắng fallback —
+  thay cho ô ký hiệu chữ mock ban đầu.
+
+### 3.2. Chi tiết dây hụi & Tham gia hụi (nốt các màn Figma còn lại)
+
+Dựng 2 màn Figma cuối chưa có route: "Thông tin hụi đã tham gia" / "Lịch sử đấu
+giá" (gộp thành trang chi tiết 4 tab) và "Tham gia hụi".
+
+- `lib/hui-mock.ts`: dữ liệu mẫu tĩnh cho tổng quan/lịch sử/thành viên/thanh
+  toán/tham gia (số liệu khớp mẫu Figma: tiến độ 83%, kỳ 05/12, v.v.).
+- `components/hui/HuiDetailHeader.tsx`: header avatar hoa + tên hụi + phần
+  hụi/kỳ + số thành viên + nút chia sẻ/cài đặt. (Back dùng `.hd-back` tĩnh —
+  KHÔNG dùng `.ln-nav-back` vì class đó `position:absolute` sẽ thoát ra giữa
+  màn hình.)
+- `app/groups/[id]/page.tsx`: trang chi tiết 1 file, 4 tab bằng state (Tổng
+  quan / Thành viên / Thanh toán / Lịch sử). Tổng quan: thanh tiến độ + lưới 8
+  ô thống kê + nút "Đóng tiền"/"Xem đấu giá". Lịch sử: timeline dọc có dot,
+  thẻ người trúng + badge "Đã nhận"/"Đang diễn ra"/"Sắp diễn ra". Deep-link tab
+  qua `?tab=` đọc phía client (tránh cần Suspense của useSearchParams).
+- `app/groups/[id]/join/page.tsx`: "Tham gia hụi" — thẻ chủ hụi gradient +
+  trust score + 2 ô thống kê, bảng chi tiết dây hụi, nút "Tham gia".
+- `AppChrome`: thêm `BARE_PATTERNS` (regex) cho `/groups/<id>` và
+  `/groups/<id>/join` để 2 màn này full-screen (header/tab riêng) mà vẫn cần
+  đăng nhập. Route `/groups/<id>/bid` giữ nguyên (vẫn có tabbar).
+- Wiring: trang chủ "Chi tiết" → `/groups/<id>`, "Đóng ngay" →
+  `/groups/grp-xxx?tab=payments`; danh sách dây hụi thêm nút "Chi tiết" →
+  `/groups/<id>/join`.
+- CSS `.hd-*` (chi tiết) & `.jn-*` (tham gia) — theme-aware. Đã chụp kiểm thử
+  cả 4 tab + màn tham gia ở light mode, khớp mẫu; tsc + eslint sạch.
+
 ## 4. Git & hạ tầng
 
 - Khởi tạo git cục bộ (`git init`) — lý do trực tiếp: để VS Code tự làm mờ file

@@ -141,6 +141,9 @@ function GroupsList() {
                     ? "Đang tham gia..."
                     : "Tham gia"}
               </button>
+              <Link href={`/groups/${g.id}/join`} className="btn btn-outline btn-sm">
+                Chi tiết
+              </Link>
               <Link href={`/groups/${g.id}/bid`} className="btn btn-outline btn-sm">
                 Vào phòng đấu giá
               </Link>
