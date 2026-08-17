@@ -174,6 +174,24 @@ giá" (gộp thành trang chi tiết 4 tab) và "Tham gia hụi".
 - CSS `.hd-*` (chi tiết) & `.jn-*` (tham gia) — theme-aware. Đã chụp kiểm thử
   cả 4 tab + màn tham gia ở light mode, khớp mẫu; tsc + eslint sạch.
 
+### 3.3. Hồ sơ (menu) & Trust Score (gauge)
+
+- Đổi chữ hiển thị "Credit Score" → "Trust Score" ở dashboard + hồ sơ (giữ
+  nguyên tên biến/model/API bên trong).
+- `app/profile/page.tsx`: dựng lại theo mẫu Figma "Hồ sơ" — header "Hồ sơ" +
+  chuông/cài đặt, thẻ hồ sơ (avatar + badge "Thành viên" + SĐT), list mục
+  (Thông tin cá nhân, Trust Score, Tài khoản liên kết, Nguồn thanh toán, Đổi
+  mật khẩu, Thiết bị đăng nhập, Cài đặt, Trợ giúp) + Đăng xuất đỏ. Mục chưa có
+  route → toast "đang phát triển". Ẩn app-header chung trên `/profile` (thêm
+  vào `NO_HEADER_ROUTES`), giữ tabbar. CSS `.pf-*`.
+- `app/trust-score/page.tsx`: theo photo `public/Figma/trustscore.png` — màn
+  nền tím đậm full-screen (thêm `/trust-score` vào `BARE_PREFIXES`), gauge SVG
+  cung ~220° gradient đỏ→xanh + knob trắng theo tỉ lệ điểm, số lớn + "/1000" +
+  badge phân hạng (Xuất sắc/Tốt/Khá/Trung bình/Yếu), 2 thẻ "Các mức điểm" &
+  "Lịch sử cộng điểm" (thẻ lịch sử mở rộng inline từ creditScoreEvents thật).
+  Điểm lấy từ `/api/dashboard` (mock 720). CSS `.tsx-*` (luôn tối, fill
+  `100dvh`). Đã chụp kiểm thử khớp photo; tsc + eslint sạch.
+
 ## 4. Git & hạ tầng
 
 - Khởi tạo git cục bộ (`git init`) — lý do trực tiếp: để VS Code tự làm mờ file
