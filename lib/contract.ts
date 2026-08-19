@@ -656,8 +656,14 @@ function normalizeLog(type: OnChainEventType, log: EventLog): OnChainHistoryEven
 // (contract.queryFilter) — nguồn minh bạch, bất biến, ai cũng truy vấn được. Gộp
 // mọi loại event, gắn timestamp theo khối (gọi 1 lần mỗi khối để đỡ tốn RPC), rồi
 // sắp xếp mới nhất trước. Trả về [] nếu chưa cấu hình/không có provider.
+//
+// `fromBlock`: block bắt đầu quét (mặc định 0 = từ đầu chain). Với contract THẬT,
+// truyền block deploy của dây hụi vào đây để tránh quét cả lịch sử Sepolia — mỗi
+// dây là 1 contract riêng nên mọi event đều nằm từ block deploy trở đi. Ở MOCK
+// mode tham số này không dùng tới.
 export async function getOnChainHistory(
-  groupContractAddress: string
+  groupContractAddress: string,
+  fromBlock: number = 0
 ): Promise<OnChainHistoryEvent[]> {
   if (MOCK_MODE) {
     await mockDelay();
@@ -669,7 +675,7 @@ export async function getOnChainHistory(
 
   const events: OnChainHistoryEvent[] = [];
   for (const name of HISTORY_EVENT_NAMES) {
-    const logs = await contract.queryFilter(name);
+    const logs = await contract.queryFilter(name, fromBlock);
     for (const log of logs) {
       if (log instanceof EventLog) events.push(normalizeLog(name, log));
     }

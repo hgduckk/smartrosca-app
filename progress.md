@@ -362,7 +362,8 @@ cứu công khai (Phần J PDF). Giữ MOCK mode (nhánh mock đầy đủ).
   - `getOnChainHistory()` THẬT: lặp `contract.queryFilter(name)` cho từng loại
     event, chuẩn hoá args theo thứ tự ABI (`normalizeLog`), gắn timestamp theo
     khối (gộp block trùng để đỡ gọi RPC qua `provider.getBlock`), sort mới nhất
-    trước. Nhánh MOCK trả `mockOnChainHistory()`.
+    trước. Nhánh MOCK trả `mockOnChainHistory()`. Có tham số `fromBlock` (mặc định
+    0) — real mode truyền block deploy để không quét cả lịch sử Sepolia.
   - Thêm `getGroupSummaryOnChain()`: đọc song song toàn bộ view (organizer,
     shareAmount, totalMembers, collateralAmount, roundDuration, bidDuration,
     currentRound, getMemberCount, status, currentMaxBidCap) → `GroupSummaryOnChain`.
