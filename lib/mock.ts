@@ -11,6 +11,8 @@
 // NEXT_PUBLIC_MOCK_MODE=false là chạy code thật như cũ.
 // ============================================================================
 
+import type { OnChainHistoryEvent, GroupSummaryOnChain } from "./contract";
+
 export const MOCK_MODE = process.env.NEXT_PUBLIC_MOCK_MODE !== "false";
 
 // Địa chỉ ví giả để mọi UI phụ thuộc ví hiển thị như "đã kết nối".
@@ -178,12 +180,105 @@ export function mockBids() {
   };
 }
 
+// --- Sổ cái minh bạch (tra cứu on-chain công khai) ------------------------
+
+// Địa chỉ ví giả xác định theo chỉ số (0x000…00N) — deterministic cho demo.
+const mockAddr = (n: number) => "0x" + n.toString(16).padStart(40, "0");
+
+// Danh mục dây hụi có thể tra cứu (khớp contractAddress trong mockGroupsList).
+export const MOCK_EXPLORER_GROUPS = [
+  { name: "Hụi XXX", contractAddress: "0xAbc0000000000000000000000000000000000001" },
+  { name: "Hụi YYY", contractAddress: "0xAbc0000000000000000000000000000000000002" },
+];
+
+export function mockGroupSummary(contractAddress: string): GroupSummaryOnChain {
+  const isYYY = contractAddress.toLowerCase().endsWith("002");
+  return {
+    contractAddress,
+    organizer: mockAddr(1),
+    shareAmountWei: ETH(isYYY ? 1 : 0.5),
+    totalMembers: isYYY ? 12 : 10,
+    memberCount: isYYY ? 12 : 10,
+    collateralWei: ETH(isYYY ? 2 : 1),
+    roundDurationSec: 30 * 86400,
+    bidDurationSec: (isYYY ? 20 : 15) * 60,
+    currentRound: 4,
+    status: 1, // Đang chạy
+    currentMaxBidCapWei: ETH(0.28),
+  };
+}
+
+// Dựng dòng thời gian on-chain mẫu, mạch lạc theo nghiệp vụ: 10 thành viên tham
+// gia → mở vòng → kêu lãi → chốt vòng → đóng góp → giải ngân, lặp qua vài kỳ,
+// chèn 1 sự kiện vi phạm, kỳ hiện tại đang đấu dở. Trả về mới nhất trước.
+export function mockOnChainHistory(): OnChainHistoryEvent[] {
+  const evts: OnChainHistoryEvent[] = [];
+  let block = 5_200_000;
+  let t = Date.now() - 62 * 86400_000; // bắt đầu ~62 ngày trước
+  const push = (
+    type: OnChainHistoryEvent["type"],
+    roundNumber: number | null,
+    address: string | null,
+    amountEth: number | null,
+    gapMs: number
+  ) => {
+    block += Math.floor(Math.random() * 4) + 1;
+    t += gapMs;
+    evts.push({
+      type,
+      roundNumber,
+      address,
+      amountWei: amountEth == null ? null : ETH(amountEth),
+      txHash: mockTxHash(),
+      blockNumber: block,
+      logIndex: 0,
+      timestamp: Math.floor(t / 1000),
+    });
+  };
+  const H = 3600_000;
+
+  // Tuyển đủ 10 thành viên (mỗi người ký quỹ 1 ETH).
+  for (let i = 1; i <= 10; i++) push("MemberJoined", null, mockAddr(i), 1, 5 * H);
+
+  // Kỳ 1: mở → kêu lãi → chốt → đóng góp → giải ngân.
+  push("RoundStarted", 1, null, null, 6 * H);
+  push("BidPlaced", 1, mockAddr(3), 0.04, 2 * H);
+  push("BidPlaced", 1, mockAddr(7), 0.055, 3 * H);
+  push("RoundClosed", 1, mockAddr(7), 0.055, 4 * H);
+  push("ContributionMade", 1, mockAddr(1), 0.5, 20 * H);
+  push("ContributionMade", 1, mockAddr(2), 0.445, 22 * H);
+  push("Payout", 1, mockAddr(7), 4.45, 26 * H);
+
+  // Kỳ 2.
+  push("RoundStarted", 2, null, null, 30 * H);
+  push("BidPlaced", 2, mockAddr(5), 0.03, 2 * H);
+  push("BidPlaced", 2, mockAddr(9), 0.048, 5 * H);
+  push("RoundClosed", 2, mockAddr(9), 0.048, 4 * H);
+  push("ContributionMade", 2, mockAddr(3), 0.5, 24 * H);
+  push("Payout", 2, mockAddr(9), 4.5, 30 * H);
+
+  // Kỳ 3: có 1 thành viên vi phạm (bị đánh dấu, mất ký quỹ bù vào).
+  push("RoundStarted", 3, null, null, 30 * H);
+  push("BidPlaced", 3, mockAddr(2), 0.036, 3 * H);
+  push("RoundClosed", 3, mockAddr(2), 0.036, 5 * H);
+  push("MemberDefaulted", 3, mockAddr(6), 1, 40 * H);
+  push("Payout", 3, mockAddr(2), 4.5, 20 * H);
+
+  // Kỳ 4: đang đấu dở (mới mở + vài lượt kêu lãi).
+  push("RoundStarted", 4, null, null, 30 * H);
+  push("BidPlaced", 4, mockAddr(4), 0.02, 3 * H);
+  push("BidPlaced", 4, mockAddr(8), 0.031, 4 * H);
+
+  return evts.sort((x, y) => y.blockNumber - x.blockNumber || y.logIndex - x.logIndex);
+}
+
 export function mockDashboard() {
   const now = Date.now();
   const iso = (daysAgo: number) => new Date(now - daysAgo * 86400000).toISOString();
   return {
     creditScore: { score: 720, updatedAt: iso(1) },
     creditScoreEvents: [
+      { id: "e0", delta: 50, reason: "Hoàn thành dây hụi Hụi YYY", createdAt: iso(0) },
       { id: "e1", delta: 20, reason: "Đóng góp đúng hạn — Kỳ 2", createdAt: iso(1) },
       { id: "e2", delta: 20, reason: "Đóng góp đúng hạn — Kỳ 1", createdAt: iso(31) },
       { id: "e3", delta: 30, reason: "Hoàn tất xác thực eKYC", createdAt: iso(40) },

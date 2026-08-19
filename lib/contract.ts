@@ -2,6 +2,7 @@ import {
   BrowserProvider,
   Contract,
   ContractFactory,
+  EventLog,
   type ContractRunner,
   type InterfaceAbi,
   type Signer,
@@ -12,6 +13,8 @@ import {
   mockTxHash,
   mockContractAddress,
   mockDelay,
+  mockOnChainHistory,
+  mockGroupSummary,
 } from "./mock";
 
 export const CHAIN_ID = Number(process.env.NEXT_PUBLIC_CHAIN_ID ?? "11155111");
@@ -576,18 +579,182 @@ export function listenForMemberDefaulted(
   };
 }
 
+// Các loại sự kiện on-chain của 1 dây hụi (khớp đúng tên event trong ABI). Đây là
+// "sổ cái minh bạch" — ai cũng đọc lại được, không ai sửa được.
+export type OnChainEventType =
+  | "MemberJoined"
+  | "RoundStarted"
+  | "BidPlaced"
+  | "RoundClosed"
+  | "ContributionMade"
+  | "Payout"
+  | "MemberDefaulted"
+  | "GroupCompleted";
+
 export type OnChainHistoryEvent = {
-  type: "BidPlaced" | "RoundClosed" | "Payout";
+  type: OnChainEventType;
+  // Kỳ liên quan (null với MemberJoined/GroupCompleted không gắn kỳ).
+  roundNumber: number | null;
+  // Địa chỉ ví liên quan: người tham gia/kêu lãi/người thắng… (null nếu không có).
+  address: string | null;
+  // Số tiền liên quan (wei dạng string) — mức lãi/khoản đóng/khoản giải ngân/ký quỹ.
+  amountWei: string | null;
   txHash: string;
+  blockNumber: number;
+  logIndex: number;
+  // Thời điểm khối được đào (unix giây) — best-effort, null nếu không đọc được.
+  timestamp: number | null;
 };
 
-// PLACEHOLDER — có thể đọc lịch sử event thật từ contract (contract.queryFilter)
-// giờ ABI đã có thật, nhưng chưa cần thiết: dashboard hiện dùng tx hash đã lưu
-// trong DB (kết quả của các hành động on-chain thực hiện qua app này), là nguồn
-// dữ liệu tương đương và rẻ hơn (không cần gọi RPC lại).
+const HISTORY_EVENT_NAMES: OnChainEventType[] = [
+  "MemberJoined",
+  "RoundStarted",
+  "BidPlaced",
+  "RoundClosed",
+  "ContributionMade",
+  "Payout",
+  "MemberDefaulted",
+  "GroupCompleted",
+];
+
+// Chuẩn hoá 1 log thành OnChainHistoryEvent — đọc đúng vị trí tham số theo từng
+// event (thứ tự args khớp ABI ở đầu file).
+function normalizeLog(type: OnChainEventType, log: EventLog): OnChainHistoryEvent {
+  const a = log.args;
+  let roundNumber: number | null = null;
+  let address: string | null = null;
+  let amountWei: string | null = null;
+  switch (type) {
+    case "MemberJoined": // (member, collateral)
+      address = a[0];
+      amountWei = a[1]?.toString() ?? null;
+      break;
+    case "RoundStarted": // (roundNumber, bidDeadline)
+      roundNumber = Number(a[0]);
+      break;
+    case "GroupCompleted": // ()
+      break;
+    default: // (roundNumber, address, amount) cho phần còn lại
+      roundNumber = Number(a[0]);
+      address = a[1];
+      amountWei = a[2]?.toString() ?? null;
+      break;
+  }
+  return {
+    type,
+    roundNumber,
+    address,
+    amountWei,
+    txHash: log.transactionHash,
+    blockNumber: log.blockNumber,
+    logIndex: log.index,
+    timestamp: null,
+  };
+}
+
+// Đọc TOÀN BỘ lịch sử sự kiện của 1 dây hụi trực tiếp từ blockchain
+// (contract.queryFilter) — nguồn minh bạch, bất biến, ai cũng truy vấn được. Gộp
+// mọi loại event, gắn timestamp theo khối (gọi 1 lần mỗi khối để đỡ tốn RPC), rồi
+// sắp xếp mới nhất trước. Trả về [] nếu chưa cấu hình/không có provider.
 export async function getOnChainHistory(
-  _groupContractAddress: string
+  groupContractAddress: string
 ): Promise<OnChainHistoryEvent[]> {
-  if (!IS_CONTRACT_CONFIGURED) return [];
-  return [];
+  if (MOCK_MODE) {
+    await mockDelay();
+    return mockOnChainHistory();
+  }
+  if (!IS_CONTRACT_CONFIGURED || !window.ethereum) return [];
+  const provider = new BrowserProvider(window.ethereum);
+  const contract = getGroupContract(provider, groupContractAddress);
+
+  const events: OnChainHistoryEvent[] = [];
+  for (const name of HISTORY_EVENT_NAMES) {
+    const logs = await contract.queryFilter(name);
+    for (const log of logs) {
+      if (log instanceof EventLog) events.push(normalizeLog(name, log));
+    }
+  }
+
+  // Gắn timestamp theo khối (gộp các khối trùng để giảm số lần gọi RPC).
+  const uniqueBlocks = [...new Set(events.map((e) => e.blockNumber))];
+  const blockTime = new Map<number, number>();
+  await Promise.all(
+    uniqueBlocks.map(async (bn) => {
+      const b = await provider.getBlock(bn);
+      if (b) blockTime.set(bn, Number(b.timestamp));
+    })
+  );
+  for (const e of events) e.timestamp = blockTime.get(e.blockNumber) ?? null;
+
+  events.sort(
+    (x, y) => y.blockNumber - x.blockNumber || y.logIndex - x.logIndex
+  );
+  return events;
+}
+
+// Tóm tắt trạng thái 1 dây hụi đọc thẳng từ contract (toàn bộ là hàm view, không
+// tốn gas) — dùng cho trang tra cứu công khai. status là enum GroupStatus của
+// contract (0=đang mở, 1=đang chạy, 2=hoàn thành, 3=đã huỷ).
+export type GroupSummaryOnChain = {
+  contractAddress: string;
+  organizer: string;
+  shareAmountWei: string;
+  totalMembers: number;
+  memberCount: number;
+  collateralWei: string;
+  roundDurationSec: number;
+  bidDurationSec: number;
+  currentRound: number;
+  status: number;
+  currentMaxBidCapWei: string;
+};
+
+export async function getGroupSummaryOnChain(
+  groupContractAddress: string
+): Promise<GroupSummaryOnChain> {
+  if (MOCK_MODE) {
+    await mockDelay();
+    return mockGroupSummary(groupContractAddress);
+  }
+  if (!IS_CONTRACT_CONFIGURED || !window.ethereum) {
+    throw new Error("Chưa cấu hình ABI contract thật hoặc chưa có ví.");
+  }
+  const provider = new BrowserProvider(window.ethereum);
+  const c = getGroupContract(provider, groupContractAddress);
+  const [
+    organizer,
+    shareAmount,
+    totalMembers,
+    collateralAmount,
+    roundDuration,
+    bidDuration,
+    currentRound,
+    memberCount,
+    status,
+    maxCap,
+  ] = await Promise.all([
+    c.organizer(),
+    c.shareAmount(),
+    c.totalMembers(),
+    c.collateralAmount(),
+    c.roundDuration(),
+    c.bidDuration(),
+    c.currentRound(),
+    c.getMemberCount(),
+    c.status(),
+    c.currentMaxBidCap().catch(() => BigInt(0)),
+  ]);
+  return {
+    contractAddress: groupContractAddress,
+    organizer,
+    shareAmountWei: shareAmount.toString(),
+    totalMembers: Number(totalMembers),
+    memberCount: Number(memberCount),
+    collateralWei: collateralAmount.toString(),
+    roundDurationSec: Number(roundDuration),
+    bidDurationSec: Number(bidDuration),
+    currentRound: Number(currentRound),
+    status: Number(status),
+    currentMaxBidCapWei: (maxCap ?? BigInt(0)).toString(),
+  };
 }

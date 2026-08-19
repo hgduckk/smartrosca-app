@@ -23,6 +23,7 @@ import { estimateMaxBidCapWei } from "@/lib/hui-math";
 type Member = {
   userId: string;
   hasWon: boolean;
+  wonRound: number | null;
   user: { walletAddress: string };
 };
 
@@ -247,6 +248,16 @@ function BidRoom({ groupId }: { groupId: string }) {
   const exceedsCap =
     bidAmountWei !== null && maxBidCapWei !== null && bidAmountWei > maxBidCapWei;
 
+  // Thành viên ứng với ví hiện tại trong dây (bất kể có phải người thắng kỳ này).
+  // Dùng để chặn người ĐÃ HỐT (hụi chết) kêu lãi lại — nguyên tắc nghiệp vụ hụi:
+  // mỗi thành viên chỉ được nhận tiền đúng 1 lần, đã hốt thì không đấu giá nữa
+  // (contract thật cũng revert "Da hot roi, khong duoc dau nua").
+  const myGroupMember = useMemo(
+    () => group?.members.find((m) => m.user.walletAddress.toLowerCase() === address?.toLowerCase()) ?? null,
+    [group, address]
+  );
+  const alreadyWon = Boolean(myGroupMember?.hasWon);
+
   const handlePlaceBid = async () => {
     if (!address || !round || !group?.contractAddress || bidAmountWei === null) return;
     setPlacingBid(true);
@@ -411,8 +422,8 @@ function BidRoom({ groupId }: { groupId: string }) {
       const signer = await getBrowserSigner();
       const { txHash } = await contributeOnChain(signer, group.contractAddress, BigInt(requiredWei));
 
-      // 2. Backend chỉ ghi nhận kết quả.
-      const onTime = Date.now() <= new Date(round.createdAt).getTime() + group.roundDurationSec * 1000;
+      // 2. Backend chỉ ghi nhận kết quả. onTime do SERVER tự tính từ hạn chót của
+      // kỳ (không gửi từ client để tránh gian lận điểm tín nhiệm).
       const res = await fetch("/api/contributions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -421,7 +432,6 @@ function BidRoom({ groupId }: { groupId: string }) {
           walletAddress: address,
           amountWei: requiredWei,
           txHash,
-          onTime,
         }),
       });
       if (!res.ok) {
@@ -605,42 +615,54 @@ function BidRoom({ groupId }: { groupId: string }) {
             </span>
           </p>
 
-          <div className="card">
-            <label className="field">
-              Mức lãi kêu (ETH)
-              <input
-                className="input"
-                type="number"
-                step="any"
-                min="0"
-                value={bidAmountEth}
-                onChange={(e) => setBidAmountEth(e.target.value)}
-                disabled={isExpired}
-              />
-            </label>
-            {maxBidCapWei !== null && (
-              <p className="muted" style={{ fontSize: "0.85rem" }}>
-                {maxBidCapIsOnChain
-                  ? `Trần lãi kỳ ${round.roundNumber} (đọc từ contract, 20%/năm):`
-                  : `Trần lãi ước tính kỳ ${round.roundNumber} (~20%/năm):`}{" "}
-                {formatEther(maxBidCapWei)} ETH
-                {maxBidCapWei === BigInt(0) && " — kỳ cuối không còn kỳ nào để tính lãi"}
+          {alreadyWon ? (
+            <div className="card">
+              <p className="row" style={{ gap: "0.5rem", margin: 0 }}>
+                <span className="badge badge-neutral">hụi chết</span>
+                <span className="muted">
+                  Bạn đã hốt ở kỳ {myGroupMember?.wonRound ?? "trước"} — không được kêu lãi lại.
+                  Ở các kỳ còn lại bạn chỉ cần đóng đủ phần hụi.
+                </span>
               </p>
-            )}
-            {exceedsCap && (
-              <p style={{ color: "var(--color-warning)" }}>
-                Cảnh báo: mức lãi kêu vượt trần{maxBidCapIsOnChain ? "" : " ước tính"} — smart
-                contract sẽ từ chối giao dịch.
-              </p>
-            )}
-            <button
-              className="btn btn-primary"
-              onClick={handlePlaceBid}
-              disabled={isExpired || placingBid || bidAmountWei === null}
-            >
-              {placingBid ? "Đang đặt bid..." : "Đặt bid"}
-            </button>
-          </div>
+            </div>
+          ) : (
+            <div className="card">
+              <label className="field">
+                Mức lãi kêu (ETH)
+                <input
+                  className="input"
+                  type="number"
+                  step="any"
+                  min="0"
+                  value={bidAmountEth}
+                  onChange={(e) => setBidAmountEth(e.target.value)}
+                  disabled={isExpired}
+                />
+              </label>
+              {maxBidCapWei !== null && (
+                <p className="muted" style={{ fontSize: "0.85rem" }}>
+                  {maxBidCapIsOnChain
+                    ? `Trần lãi kỳ ${round.roundNumber} (đọc từ contract, 20%/năm):`
+                    : `Trần lãi ước tính kỳ ${round.roundNumber} (~20%/năm):`}{" "}
+                  {formatEther(maxBidCapWei)} ETH
+                  {maxBidCapWei === BigInt(0) && " — kỳ cuối không còn kỳ nào để tính lãi"}
+                </p>
+              )}
+              {exceedsCap && (
+                <p style={{ color: "var(--color-warning)" }}>
+                  Mức lãi kêu vượt trần{maxBidCapIsOnChain ? "" : " ước tính"} theo luật
+                  (20%/năm) — hãy giảm xuống, smart contract sẽ từ chối giao dịch vượt trần.
+                </p>
+              )}
+              <button
+                className="btn btn-primary"
+                onClick={handlePlaceBid}
+                disabled={isExpired || placingBid || bidAmountWei === null || exceedsCap}
+              >
+                {placingBid ? "Đang đặt bid..." : "Đặt bid"}
+              </button>
+            </div>
+          )}
 
           <div className="card">
             <h3 style={{ marginTop: 0 }}>Danh sách bid hiện tại</h3>

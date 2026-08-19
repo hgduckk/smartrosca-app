@@ -3,7 +3,6 @@
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { useWallet } from "@/lib/wallet-context";
-import { useToast } from "@/components/ToastProvider";
 
 function truncate(address: string) {
   return `${address.slice(0, 8)}...${address.slice(-6)}`;
@@ -29,7 +28,6 @@ export default function ProfilePage() {
   const router = useRouter();
   const { user, logout } = useAuth();
   const { address } = useWallet();
-  const toast = useToast();
 
   const accountLabel = user?.account ? user.account : address ? truncate(address) : "—";
 
@@ -38,14 +36,12 @@ export default function ProfilePage() {
     router.replace("/login");
   }
 
-  const soon = () => toast("Tính năng đang được phát triển", "info");
-
-  // Mỗi mục: icon + nhãn + hành động (điều hướng hoặc toast "đang phát triển").
+  // Mỗi mục: icon + nhãn + hành động điều hướng tới trang tương ứng.
   const items: { label: string; icon: React.ReactNode; onClick: () => void; danger?: boolean }[] = [
     {
       label: "Thông tin cá nhân",
       icon: (<Icon><circle cx="12" cy="8.2" r="3.2" /><path d="M5 20c0-3.5 3.1-6.2 7-6.2s7 2.7 7 6.2" /></Icon>),
-      onClick: soon,
+      onClick: () => router.push("/profile/info"),
     },
     {
       label: "Trust Score",
@@ -70,17 +66,17 @@ export default function ProfilePage() {
     {
       label: "Thiết bị đăng nhập",
       icon: (<Icon><rect x="3" y="4" width="18" height="12" rx="2" /><path d="M8 20h8M12 16v4" /></Icon>),
-      onClick: soon,
+      onClick: () => router.push("/devices"),
     },
     {
       label: "Cài đặt",
       icon: (<Icon><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1v.2a2 2 0 0 1-4 0v-.1A1.6 1.6 0 0 0 7 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 2.6 14v-.1a2 2 0 0 1 0-3.8h.2A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 10 4.6h.1A1.6 1.6 0 0 0 11 2.6v-.2a2 2 0 0 1 4 0v.2A1.6 1.6 0 0 0 17 4.6a1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1A1.6 1.6 0 0 0 21.4 10v.1a1.6 1.6 0 0 0 0 3.8Z" /></Icon>),
-      onClick: soon,
+      onClick: () => router.push("/settings"),
     },
     {
       label: "Trung tâm trợ giúp",
       icon: (<Icon><circle cx="12" cy="12" r="9" /><path d="M9.5 9.5a2.5 2.5 0 0 1 4.5 1.5c0 1.6-2 1.9-2 3.5M12 17.5h.01" /></Icon>),
-      onClick: soon,
+      onClick: () => router.push("/help"),
     },
   ];
 
@@ -89,10 +85,10 @@ export default function ProfilePage() {
       <header className="pf-header">
         <h1 className="pf-title">Hồ sơ</h1>
         <div className="pf-header-actions">
-          <button className="pf-icon-btn" aria-label="Thông báo" onClick={soon}>
+          <button className="pf-icon-btn" aria-label="Thông báo" onClick={() => router.push("/notifications")}>
             <Icon><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6Z" /><path d="M10 20a2 2 0 0 0 4 0" /></Icon>
           </button>
-          <button className="pf-icon-btn" aria-label="Cài đặt" onClick={soon}>
+          <button className="pf-icon-btn" aria-label="Cài đặt" onClick={() => router.push("/settings")}>
             <Icon><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1v.2a2 2 0 0 1-4 0v-.1A1.6 1.6 0 0 0 7 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 2.6 14v-.1a2 2 0 0 1 0-3.8h.2A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 10 4.6h.1A1.6 1.6 0 0 0 11 2.6v-.2a2 2 0 0 1 4 0v.2A1.6 1.6 0 0 0 17 4.6a1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1A1.6 1.6 0 0 0 21.4 10v.1a1.6 1.6 0 0 0 0 3.8Z" /></Icon>
           </button>
         </div>

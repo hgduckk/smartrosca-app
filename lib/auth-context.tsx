@@ -16,6 +16,8 @@ import {
 export type MockUser = {
   name: string;
   account: string; // SĐT / CCCD đã nhập
+  email?: string;
+  phone?: string;
 };
 
 type AuthContextValue = {
@@ -23,6 +25,7 @@ type AuthContextValue = {
   ready: boolean; // đã đọc xong localStorage (tránh nháy/redirect sai lúc mcount)
   login: (account: string, name?: string) => void;
   register: (data: { name: string; account: string }) => void;
+  updateUser: (patch: Partial<MockUser>) => void;
   logout: () => void;
 };
 
@@ -68,10 +71,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [persist],
   );
 
+  // Cập nhật hồ sơ (mock): gộp patch vào user hiện tại và lưu lại localStorage.
+  // Giai đoạn thật thay thân hàm bằng lời gọi API cập nhật hồ sơ, giữ nguyên chữ ký.
+  const updateUser = useCallback(
+    (patch: Partial<MockUser>) => {
+      setUser((prev) => {
+        if (!prev) return prev;
+        const next = { ...prev, ...patch };
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+        } catch {
+          /* bỏ qua */
+        }
+        return next;
+      });
+    },
+    [],
+  );
+
   const logout = useCallback(() => persist(null), [persist]);
 
   return (
-    <AuthContext.Provider value={{ user, ready, login, register, logout }}>
+    <AuthContext.Provider value={{ user, ready, login, register, updateUser, logout }}>
       {children}
     </AuthContext.Provider>
   );

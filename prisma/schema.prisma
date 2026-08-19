@@ -163,6 +163,10 @@ model Bid {
   user  User  @relation(fields: [userId], references: [id])
 }
 
+// Unique [roundId, userId]: mỗi thành viên chỉ đóng góp ĐÚNG MỘT LẦN cho mỗi kỳ.
+// Trước đây thiếu ràng buộc này nên một người có thể đóng nhiều lần → bị cộng
+// điểm tín nhiệm nhiều lần cho cùng một hành động. Ràng buộc + guard idempotent
+// trong POST /api/contributions đảm bảo chỉ ghi nhận (và chấm điểm) một lần.
 model Contribution {
   id        String   @id @default(cuid())
   roundId   String
@@ -174,4 +178,6 @@ model Contribution {
 
   round Round @relation(fields: [roundId], references: [id])
   user  User  @relation(fields: [userId], references: [id])
+
+  @@unique([roundId, userId])
 }

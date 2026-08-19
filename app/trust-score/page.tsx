@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useWallet } from "@/lib/wallet-context";
 import { useToast } from "@/components/ToastProvider";
+import { creditScoreLevel, TRUST_SCORE_TIERS } from "@/lib/credit-score-level";
+import { TRUST_SCORE_MAX } from "@/lib/credit-score";
 
 type ScoreEvent = { id: string; delta: number; reason: string; createdAt: string };
 type Data = {
@@ -11,16 +13,10 @@ type Data = {
   creditScoreEvents: ScoreEvent[];
 };
 
-const MAX = 1000;
+const MAX = TRUST_SCORE_MAX;
 
-// Phân hạng theo mẫu photo: gauge đỏ→xanh, nhãn Xuất sắc/Tốt/Khá/Trung bình/Yếu.
-function tier(score: number) {
-  if (score >= 800) return { label: "Xuất sắc", color: "#25c766", note: "Bạn đang thuộc nhóm uy tín cao" };
-  if (score >= 650) return { label: "Tốt", color: "#5ad06a", note: "Bạn đang thuộc nhóm uy tín cao" };
-  if (score >= 500) return { label: "Khá", color: "#ffd60a", note: "Uy tín ở mức khá" };
-  if (score >= 350) return { label: "Trung bình", color: "#ff9f0a", note: "Nên cải thiện điểm uy tín" };
-  return { label: "Yếu", color: "#ff5a5a", note: "Cần cải thiện điểm uy tín" };
-}
+// Phân hạng lấy từ nguồn chung credit-score-level.ts (gauge đỏ→xanh, 5 mức).
+const tier = creditScoreLevel;
 
 // Hình học cung gauge (cung ~220°, hở ở đáy).
 const CX = 140;
@@ -40,6 +36,7 @@ export default function TrustScorePage() {
   const [data, setData] = useState<Data | null>(null);
   const [loading, setLoading] = useState(true);
   const [showHistory, setShowHistory] = useState(false);
+  const [showTiers, setShowTiers] = useState(false);
 
   const load = useCallback(async () => {
     if (!address) {
@@ -117,13 +114,35 @@ export default function TrustScorePage() {
       {!loading && <p className="tsx-note">{t.note}</p>}
 
       <div className="tsx-cards">
-        <button type="button" className="tsx-card" onClick={() => toast("Tính năng đang được phát triển", "info")}>
+        <button type="button" className="tsx-card" onClick={() => setShowTiers((v) => !v)} aria-expanded={showTiers}>
           <div className="tsx-card-body">
             <p className="tsx-card-title">Các mức điểm</p>
             <p className="tsx-card-desc">Xem các mức điểm và quyền lợi tương ứng</p>
           </div>
-          <svg className="tsx-card-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 6 6 6-6 6" /></svg>
+          <svg className="tsx-card-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: showTiers ? "rotate(90deg)" : "none" }}><path d="m9 6 6 6-6 6" /></svg>
         </button>
+
+        {showTiers && (
+          <div className="tsx-history">
+            {TRUST_SCORE_TIERS.map((tr) => {
+              const active = t.label === tr.label;
+              return (
+                <div key={tr.label} className="tsx-history-row" style={active ? { outline: `1.5px solid ${tr.color}` } : undefined}>
+                  <div className="tsx-history-info" style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+                    <span style={{ width: 12, height: 12, borderRadius: "50%", background: tr.color, flex: "none" }} />
+                    <div>
+                      <p className="tsx-history-reason">
+                        {tr.label}
+                        {active && <span style={{ marginLeft: "0.4rem", fontSize: "0.72rem", color: tr.color }}>· mức của bạn</span>}
+                      </p>
+                      <p className="tsx-history-date">{tr.range} điểm</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         <button type="button" className="tsx-card" onClick={() => setShowHistory((v) => !v)} aria-expanded={showHistory}>
           <div className="tsx-card-body">

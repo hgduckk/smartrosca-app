@@ -301,3 +301,123 @@ ABI có hàm `markDefault(address member)` nhưng không có cơ chế tự đ�
    `prisma migrate dev` — nhớ chạy lại migrate sau mỗi lần thay đổi
    `schema.prisma` nếu có thay đổi tiếp theo. Hiện chỉ có 1 migration
    (`20260728081107_init`) trên Supabase.
+
+## 9. Rà soát & phát triển theo SmartROSCA_TaiLieuMaster_v3.pdf
+
+Đối chiếu toàn bộ code với tài liệu master (PDF ở `public/`, đã trích text ra
+`public/pdf_text_extract.txt` bằng script Node giải nén FlateDecode — dấu tiếng
+Việt bị lỗi font nhưng đọc hiểu được). Kết luận: **công thức tiền + trần lãi
+20%/năm khớp spec** (đã đối chiếu ví dụ mục 20.3: trần K1 ≈ 7,4tr). Người dùng
+chọn làm 4 mảng, thứ tự: (1) Logic hụi → (2) Chức năng chưa có → (3) On-chain
+history → (4) Tín nhiệm. Giữ **MOCK mode** (thêm nhánh mock cho tính năng mới,
+không xoá code thật).
+
+### Mảng 1 — Logic nghiệp vụ hụi ✅ ĐÃ XONG (tsc/eslint sạch)
+- `app/api/contributions/route.ts`: **onTime tính phía SERVER** (từ
+  `round.createdAt + group.roundDurationSec`), KHÔNG tin `onTime` client gửi →
+  chống gian lận điểm tín nhiệm. **Idempotent**: guard P2002, chỉ chấm điểm 1 lần
+  cho mỗi (kỳ, thành viên).
+- `prisma/schema.prisma`: thêm `@@unique([roundId, userId])` cho `Contribution`.
+  ⚠️ **CẦN chạy `npx prisma migrate dev` khi lên real** (mock mode không cần).
+  Đã chạy `npx prisma generate` để cập nhật client types.
+- `app/api/bids/route.ts`: guard phía server — chặn bid khi vòng đã chốt, người
+  **đã hốt** (`hasWon`) kêu lại, bid **vượt trần** (dùng `estimateMaxBidCapWei`),
+  amount âm/không hợp lệ.
+- `app/groups/[id]/bid/page.tsx`: khoá nút "Đặt bid" khi `exceedsCap`; ẩn form
+  kêu lãi + hiện thông báo cho người đã hốt (`alreadyWon` từ `myGroupMember`);
+  bỏ gửi `onTime` từ client. Thêm `wonRound` vào type `Member`.
+
+### Mảng 2 — Chức năng chưa có (Hồ sơ/mật khẩu/thông báo) ✅ ĐÃ XONG (mock)
+Trước đây 5 mục ở `/profile` chỉ hiện toast "đang phát triển". Đã dựng thành
+trang thật, full-screen (bare, back-nav riêng qua component dùng chung mới
+`components/SubPage.tsx` + CSS `.sub-*` cuối `globals.css`, theme-aware):
+- `app/profile/info/page.tsx` — Thông tin cá nhân: danh tính eKYC (CCCD mask +
+  ví, chỉ đọc) + liên hệ (tên/SĐT/email) sửa & lưu được.
+- `app/settings/page.tsx` — Cài đặt: chế độ tối (đồng bộ localStorage `theme`),
+  toggle thông báo đẩy / nhắc hạn đóng hụi / sinh trắc học (lưu localStorage),
+  link đổi mật khẩu + thiết bị, ngôn ngữ, giới thiệu.
+- `app/notifications/page.tsx` — Thông báo: danh sách sự kiện hụi mock (tới hạn,
+  thắng đấu, +điểm, mở vòng, giải ngân), đánh dấu đã đọc / đọc hết.
+- `app/devices/page.tsx` — Thiết bị đăng nhập: danh sách phiên mock, đăng xuất.
+- `app/help/page.tsx` — Trung tâm trợ giúp: FAQ accordion bám nghiệp vụ (hụi đấu,
+  trần lãi, an toàn tiền, tín nhiệm, vi phạm, eKYC) + liên hệ.
+- `lib/auth-context.tsx`: thêm field `email`/`phone` + hàm `updateUser(patch)`.
+- `app/profile/page.tsx`: wire 5 mục + chuông→/notifications + gear→/settings;
+  bỏ hàm `soon` và import `useToast` không còn dùng.
+- `components/AppChrome.tsx`: thêm 5 route vào `BARE_PREFIXES`.
+
+Ghi chú: luồng mật khẩu (`/forgot-password`→`/verify-otp`→`/reset-password`→
+`/reset-success`) đã chạy sẵn như flow mock hoàn chỉnh; chỉ còn TODO backend thật
+(gửi/xác minh OTP, đặt lại mật khẩu) cho giai đoạn real — CHƯA làm (không cần ở
+mock).
+
+### Mảng 3 — On-chain history & minh bạch ✅ ĐÃ XONG (tsc/eslint sạch)
+Hiện thực đầy đủ "sổ cái minh bạch" — đọc lịch sử event thật từ chain + trang tra
+cứu công khai (Phần J PDF). Giữ MOCK mode (nhánh mock đầy đủ).
+- `lib/contract.ts`:
+  - `OnChainHistoryEvent` mở rộng: `type` (8 loại khớp ABI: MemberJoined /
+    RoundStarted / BidPlaced / RoundClosed / ContributionMade / Payout /
+    MemberDefaulted / GroupCompleted) + `roundNumber` / `address` / `amountWei` /
+    `txHash` / `blockNumber` / `logIndex` / `timestamp`.
+  - `getOnChainHistory()` THẬT: lặp `contract.queryFilter(name)` cho từng loại
+    event, chuẩn hoá args theo thứ tự ABI (`normalizeLog`), gắn timestamp theo
+    khối (gộp block trùng để đỡ gọi RPC qua `provider.getBlock`), sort mới nhất
+    trước. Nhánh MOCK trả `mockOnChainHistory()`.
+  - Thêm `getGroupSummaryOnChain()`: đọc song song toàn bộ view (organizer,
+    shareAmount, totalMembers, collateralAmount, roundDuration, bidDuration,
+    currentRound, getMemberCount, status, currentMaxBidCap) → `GroupSummaryOnChain`.
+    Nhánh MOCK trả `mockGroupSummary()`. Lưu ý: dùng `BigInt(0)` KHÔNG dùng literal
+    `0n` (target < ES2020 sẽ lỗi tsc).
+- `lib/mock.ts`: `MOCK_EXPLORER_GROUPS` (2 dây khớp `mockGroupsList`),
+  `mockGroupSummary(addr)` (phân biệt grp-xxx/yyy theo đuôi địa chỉ),
+  `mockOnChainHistory()` dựng timeline mạch lạc (10 join → 4 kỳ, chèn 1 vi phạm,
+  kỳ 4 đang đấu dở). Import `type` từ `./contract` (type-only, không tạo vòng lặp
+  runtime).
+- `app/explorer/page.tsx` — trang "Sổ cái minh bạch" full-screen (bare) & CÔNG
+  KHAI (thêm `/explorer` vào cả `BARE_PREFIXES` lẫn `PUBLIC_PREFIXES` của
+  AppChrome → xem được KHI CHƯA đăng nhập, đúng tinh thần minh bạch). Gồm: thẻ cam
+  kết minh bạch, ô dán địa chỉ contract + chip thử nhanh, thẻ tóm tắt dây hụi
+  (địa chỉ + copy, badge trạng thái, lưới 6 chỉ số, Etherscan, nút chia sẻ link),
+  bộ lọc theo loại sự kiện, và timeline dọc có rail/dot tô màu theo tông sự kiện.
+  Deep-link `?address=0x…` đọc client-side (tránh Suspense của useSearchParams),
+  cập nhật URL bằng `history.replaceState` để chia sẻ được. CSS `.ex-*` +
+  `.hd-explorer-link` cuối `globals.css`, theme-aware.
+- Điểm vào: OverviewTab của `/groups/[id]` có nút "Xem sổ cái minh bạch on-chain"
+  → `/explorer?address=<addr theo id>`; dashboard thêm link ở mục Lịch sử giao dịch.
+
+### Mảng 4 — Logic tín nhiệm ✅ ĐÃ XONG (tsc/eslint sạch)
+THỐNG NHẤT toàn bộ về MỘT thang `/1000`, xoá mâu thuẫn cũ (base 500 + 3 mức ↔
+trang trust-score 5 mức). Một nguồn sự thật duy nhất.
+- `lib/credit-score.ts`: hằng số thang /1000 — `TRUST_SCORE_START=500`,
+  `MIN=0/MAX=1000`, và các delta sự kiện: eKYC `+30`, đóng đúng hạn `+20`, đóng
+  trễ `−30`, vi phạm `−100`, hoàn thành dây hụi `+50`. `applyCreditScoreDelta`
+  giờ ĐỌC điểm hiện tại rồi ghi giá trị đã KẸP trong [0,1000] (Prisma increment
+  không tự kẹp biên); vẫn lưu `delta` gốc vào event để phản ánh đúng luật.
+- `lib/credit-score-level.ts`: `creditScoreLevel()` trả 5 mức (Xuất sắc ≥800 /
+  Tốt ≥650 / Khá ≥500 / Trung bình ≥350 / Yếu <350) kèm `variant` (badge token
+  success/warning/danger — dashboard vẫn dùng được), `color` (gauge), `note`.
+  Thêm `TRUST_SCORE_TIERS` (bảng mức + khoảng điểm) cho card "Các mức điểm".
+- `app/trust-score/page.tsx`: BỎ hàm `tier()` cục bộ, dùng `creditScoreLevel`
+  chung; `MAX` lấy `TRUST_SCORE_MAX`; card "Các mức điểm" giờ MỞ RỘNG hiển thị
+  `TRUST_SCORE_TIERS` (chấm màu + khoảng điểm + đánh dấu "mức của bạn") thay vì
+  toast "đang phát triển".
+- `app/dashboard/page.tsx`: không đổi code — `creditScoreLevel` mới tương thích
+  (vẫn có `label`/`variant`), giờ hiển thị nhãn 5 mức.
+- Gắn 2 sự kiện cộng điểm còn thiếu:
+  - `app/api/kyc/route.ts`: thưởng `+30` khi eKYC chuyển sang VERIFIED LẦN ĐẦU
+    (guard `wasVerified` — không cộng lặp mỗi POST).
+  - `app/api/rounds/[id]/payout/route.ts`: khi dây hụi hoàn tất (kỳ cuối giải
+    ngân), thưởng `+50` cho mọi thành viên còn hoạt động — idempotent nhờ guard
+    `status !== COMPLETED` (chỉ chạy đúng 1 lần lúc chuyển trạng thái).
+- `lib/mock.ts`: thêm event demo "Hoàn thành dây hụi Hụi YYY +50" vào
+  `mockDashboard` để minh hoạ luật mới.
+
+### Ghi chú migrate còn treo
+- Chạy `npx prisma migrate dev` cho ràng buộc unique `Contribution` (Mảng 1) khi
+  lên real. Mảng 4 KHÔNG đổi schema nên không cần migrate thêm.
+
+## 10. Trạng thái sau 4 mảng TaiLieuMaster v3
+
+Cả 4 mảng đã xong ở MOCK mode (tsc + eslint sạch, các route /explorer /trust-score
+/dashboard compile & serve 200). Việc còn treo là kiểm thử end-to-end THẬT trên
+Sepolia (mục 8) + migrate unique Contribution khi tắt mock.

@@ -22,6 +22,12 @@ const BARE_PREFIXES = [
   "/verify", // luồng eKYC mới: /verify, /verify/cccd-front, ...
   "/accounts", // luồng liên kết nguồn thanh toán: full-screen, có back-nav riêng
   "/trust-score", // màn Trust Score nền tối, full-screen, có back-nav riêng
+  "/profile/info", // Thông tin cá nhân — trang con của Hồ sơ (SubPage, back-nav riêng)
+  "/settings", // Cài đặt
+  "/notifications", // Thông báo
+  "/devices", // Thiết bị đăng nhập
+  "/help", // Trung tâm trợ giúp
+  "/explorer", // Sổ cái minh bạch — tra cứu on-chain công khai, full-screen
 ];
 
 // Route động chạy full-screen (không header/tabbar) nhưng vẫn cần đăng nhập:
@@ -50,6 +56,7 @@ const PUBLIC_PREFIXES = [
   "/verify-otp",
   "/reset-password",
   "/reset-success",
+  "/explorer", // Sổ cái minh bạch: tra cứu công khai, xem được khi CHƯA đăng nhập
 ];
 
 // Đã đăng nhập mà vào các trang này thì đưa về trang chủ.

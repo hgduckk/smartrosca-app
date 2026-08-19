@@ -178,6 +178,11 @@ export default function DashboardPage() {
       ))}
 
       <h2 id="history">Lịch sử giao dịch</h2>
+      <p style={{ marginTop: "-0.4rem" }}>
+        <a href="/explorer" style={{ fontSize: "0.85rem", fontWeight: 600 }}>
+          🔎 Tra cứu sổ cái minh bạch on-chain ↗
+        </a>
+      </p>
       <div className="card">
         {data.history.length === 0 && <p className="empty-state">Chưa có giao dịch nào.</p>}
         <ul className="list-plain">

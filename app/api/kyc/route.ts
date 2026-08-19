@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { MOCK_MODE, mockKyc } from "@/lib/mock";
+import { applyCreditScoreDelta, EKYC_VERIFIED_DELTA } from "@/lib/credit-score";
 
 // Đọc trạng thái KYC hiện tại của user theo địa chỉ ví.
 export async function GET(req: NextRequest) {
@@ -39,17 +40,25 @@ export async function POST(req: NextRequest) {
 
   const user = await prisma.user.findUnique({
     where: { walletAddress: walletAddress.toLowerCase() },
+    include: { kycRecord: true },
   });
 
   if (!user) {
     return NextResponse.json({ error: "Chưa có user — kết nối ví trước" }, { status: 404 });
   }
 
+  // Chỉ thưởng điểm eKYC LẦN ĐẦU chuyển sang VERIFIED (tránh cộng lặp mỗi lần POST).
+  const wasVerified = user.kycRecord?.status === "VERIFIED";
+
   const kyc = await prisma.kycRecord.upsert({
     where: { userId: user.id },
     update: { status: "VERIFIED", mockDocType, verifiedAt: new Date() },
     create: { userId: user.id, status: "VERIFIED", mockDocType, verifiedAt: new Date() },
   });
+
+  if (!wasVerified) {
+    await applyCreditScoreDelta(user.id, EKYC_VERIFIED_DELTA, "Hoàn tất xác thực eKYC");
+  }
 
   return NextResponse.json({ kyc });
 }

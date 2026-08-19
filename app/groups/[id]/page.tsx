@@ -82,6 +82,21 @@ function OverviewTab({ id, router }: { id: string; router: ReturnType<typeof use
           Xem đấu giá
         </button>
       </div>
+
+      <button
+        type="button"
+        className="hd-explorer-link"
+        onClick={() =>
+          router.push(`/explorer?address=${id === "grp-yyy" ? "0xAbc0000000000000000000000000000000000002" : "0xAbc0000000000000000000000000000000000001"}`)
+        }
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
+          <path d="m9 12 2 2 4-4" />
+        </svg>
+        Xem sổ cái minh bạch on-chain
+        <span aria-hidden="true">↗</span>
+      </button>
     </>
   );
 }
