@@ -1,8 +1,8 @@
 # SmartROSCA — Nhật ký tiến độ
 
 > File tổng hợp lại toàn bộ quá trình xây dựng từ đầu tới hiện tại, để bất kỳ ai
-> (kể cả Claude Code ở phiên làm việc sau) đọc vào là nắm được bối cảnh, đã làm
-> gì, quyết định kiến trúc nào, và còn thiếu gì.
+> đọc vào là nắm được bối cảnh, đã làm gì, quyết định kiến trúc nào, và còn
+> thiếu gì.
 
 ## 1. Bối cảnh dự án
 
